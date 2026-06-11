@@ -28,7 +28,7 @@ Light themes (`sakura`, `porcelain`) use **dark text** (`--a-fg-bright: #0d–#1
 **Interactive picker:**
 
 ```powershell
-git clone https://github.com/YOUR_USER/cursor-glass-themes.git
+git clone https://github.com/kittys1ck666/cursor-glass-themes.git
 cd cursor-glass-themes
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
