@@ -90,9 +90,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme aby
 **After install**
 
 1. Fully quit VS Code  
-2. **Enable Custom CSS and JS**  
-3. **Fix Checksums: Apply**  
-4. Restart VS Code  
+2. **Fix Checksums: Apply** (Command Palette)  
+3. Restart VS Code  
+
+If the installer reports **Workbench pre-patched**, you can **skip Enable Custom CSS and JS** — the script already injected CSS into `electron-sandbox/workbench/workbench.html` and `workbench.esm.html`.
+
+If patching failed, close VS Code, run the installer **as Administrator**, then use **Enable Custom CSS and JS** once.
 
 **Installed to:** `~/.vscode/glass-themes/`
 
@@ -110,7 +113,25 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme aby
 
 Installers download extension VSIX files automatically — **do not use `-SkipExtensions`** unless extensions are already installed.
 
-**VS Code troubleshooting:** newer builds use a versioned install folder (`electron-browser/workbench`). The installer auto-detects this. If themes still don't load: install **Custom CSS and JS** → **Enable Custom CSS and JS** → **Fix Checksums: Apply** → full restart.
+**VS Code troubleshooting**
+
+| Symptom | Fix |
+|---------|-----|
+| `Unable to locate the installation path of VSCode` | Run `.\scripts\install-vscode.ps1` from the repo folder (not `install.ps1`). Ensure **be5invis.vscode-custom-css** is installed — its marketplace title is **Custom CSS and JS Loader** (publisher: be5invis). Uninstall any *other* Custom CSS extension. |
+| `Run VS Code with admin privileges` | Close VS Code completely. Re-run installer as Administrator, or launch VS Code as Administrator and run **Enable Custom CSS and JS** once. |
+| `ENOENT workbench.esm.html` | Fixed in current installer: it creates `electron-sandbox/workbench/workbench.esm.html` from the patched workbench. Re-run `install-vscode.ps1`. |
+| Theme still plain after install | **Fix Checksums: Apply** → full restart. Re-run installer if VS Code updated. |
+
+**Verify the patch** (PowerShell):
+
+```powershell
+$wb = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\*\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
+Select-String -Path (Resolve-Path $wb) -Pattern "VSCODE-CUSTOM-CSS-START"
+```
+
+If the line matches, **Enable Custom CSS and JS** is optional.
+
+Newer VS Code builds use a versioned install folder (`1b50d58d73\resources\app\...`). The installer auto-detects `electron-browser` and mirrors patches into `electron-sandbox`.
 
 ---
 

@@ -27,6 +27,27 @@ $SettingsPath = Join-Path $env:APPDATA "Code\User\settings.json"
 $AppFolder    = if ($Insiders) { "Microsoft VS Code Insiders" } else { "Microsoft VS Code" }
 $ExtDir        = Join-Path $RepoRoot ".cache\extensions"
 $ExtRoot       = Join-Path $env:USERPROFILE ".vscode\extensions"
+$RequiredCssExtId = "be5invis.vscode-custom-css"
+
+function Get-CustomCssMirrorPaths {
+    param([string]$VsCodeDir)
+    $dir = Join-Path $VsCodeDir "electron-sandbox\workbench"
+    return @(
+        (Join-Path $dir "workbench.html"),
+        (Join-Path $dir "workbench.esm.html")
+    )
+}
+
+function Test-CustomCssExtension {
+    $correct = @(Get-ChildItem $ExtRoot -Filter "$RequiredCssExtId-*" -Directory -ErrorAction SilentlyContinue)
+    $wrong = @(Get-ChildItem $ExtRoot -Directory -ErrorAction SilentlyContinue | Where-Object {
+        $_.Name -match '(?i)custom[-_.]?css|css[-_.]?loader' -and $_.Name -notmatch "^$([regex]::Escape($RequiredCssExtId))"
+    })
+    return @{
+        Correct = $correct | Select-Object -First 1
+        Wrong   = $wrong
+    }
+}
 
 function Resolve-VSCodePaths {
     param([string]$FolderName)
@@ -46,16 +67,40 @@ function Resolve-VSCodePaths {
         if (-not $product) { continue }
 
         $appDir = $product.Directory.FullName
-        $workbench = Get-ChildItem $appDir -Recurse -Filter "workbench.html" -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -match '[\\/]workbench[\\/]workbench\.html$' } |
-            Select-Object -First 1
-        if (-not $workbench) { continue }
+        $vsCodeDir = Join-Path $appDir "out\vs\code"
+        $browserWb = Join-Path $vsCodeDir "electron-browser\workbench\workbench.html"
+        $sandboxWb = Join-Path $vsCodeDir "electron-sandbox\workbench\workbench.html"
+        $sandboxEsmWb = Join-Path $vsCodeDir "electron-sandbox\workbench\workbench.esm.html"
+
+        $canonical = $null
+        foreach ($candidate in @($browserWb, $sandboxWb, $sandboxEsmWb)) {
+            if (Test-Path $candidate) { $canonical = $candidate; break }
+        }
+        if (-not $canonical) {
+            $workbench = Get-ChildItem $appDir -Recurse -Filter "workbench.html" -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match '[\\/]workbench[\\/]workbench\.html$' } |
+                Select-Object -First 1
+            if (-not $workbench) { continue }
+            $canonical = $workbench.FullName
+        }
+
+        $customCssPaths = Get-CustomCssMirrorPaths -VsCodeDir $vsCodeDir
+        $customCssWb = $null
+        foreach ($candidate in @($sandboxWb, $sandboxEsmWb)) {
+            if (Test-Path $candidate) { $customCssWb = $candidate; break }
+        }
+        if (-not $customCssWb) { $customCssWb = $sandboxWb }
 
         return @{
-            CodeExe       = $exe
-            WorkbenchHtml = $workbench.FullName
-            ProductJson   = $product.FullName
-            InstallRoot   = $root
+            CodeExe                  = $exe
+            WorkbenchHtml            = $canonical
+            CustomCssWorkbenchHtml   = $customCssWb
+            CustomCssWorkbenchPaths  = $customCssPaths
+            SandboxWorkbenchHtml     = $sandboxWb
+            SandboxEsmWorkbenchHtml  = $sandboxEsmWb
+            VsCodeDir                = $vsCodeDir
+            ProductJson              = $product.FullName
+            InstallRoot              = $root
         }
     }
     return $null
@@ -65,9 +110,11 @@ $vscodePaths = Resolve-VSCodePaths -FolderName $AppFolder
 if (-not $vscodePaths) {
     throw "VS Code not found. Install $AppFolder or pass -Insiders for Insiders build."
 }
-$CodeExe       = $vscodePaths.CodeExe
-$WorkbenchHtml = $vscodePaths.WorkbenchHtml
-$ProductJson   = $vscodePaths.ProductJson
+$CodeExe                = $vscodePaths.CodeExe
+$WorkbenchHtml          = $vscodePaths.WorkbenchHtml
+$CustomCssWorkbenchHtml = $vscodePaths.CustomCssWorkbenchHtml
+$CustomCssWorkbenchPaths = $vscodePaths.CustomCssWorkbenchPaths
+$ProductJson            = $vscodePaths.ProductJson
 
 function Select-ThemeInteractive {
     param($ManifestObj)
@@ -232,10 +279,42 @@ function Update-ProductJsonChecksum {
     if ($product -match "`"$escapedKey`":\s*`"[^`"]+`"") {
         $product = $product -replace "`"$escapedKey`":\s*`"[^`"]+`"", "`"$key`": `"$hash`""
     } else {
-        $product = $product -replace '"vs/code/[^"]+/workbench/workbench\.html":\s*"[^"]+"', "`"$key`": `"$hash`""
+        $product = $product -replace '("checksums"\s*:\s*\{)', "`$1`n`t`t`"$key`": `"$hash`","
     }
     [System.IO.File]::WriteAllText($ProductJsonPath, $product, [System.Text.UTF8Encoding]::new($false))
     return $key
+}
+
+function Update-AllWorkbenchChecksums {
+    param([string]$ProductJsonPath, [string[]]$WorkbenchHtmlPaths)
+    $keys = @()
+    foreach ($path in ($WorkbenchHtmlPaths | Select-Object -Unique)) {
+        if ($path -and (Test-Path $path)) {
+            $keys += Update-ProductJsonChecksum -ProductJsonPath $ProductJsonPath -WorkbenchHtmlPath $path
+        }
+    }
+    return $keys
+}
+
+function Sync-CustomCssWorkbenchMirrors {
+    param([string]$PatchedHtml, [string[]]$MirrorPaths, [string]$SkipPath = $null)
+    $written = @()
+    foreach ($mirrorPath in ($MirrorPaths | Select-Object -Unique)) {
+        if (-not $mirrorPath) { continue }
+        if ($SkipPath -and $mirrorPath -eq $SkipPath) { continue }
+        $mirrorDir = Split-Path $mirrorPath -Parent
+        if (-not (Test-Path $mirrorDir)) {
+            New-Item -ItemType Directory -Force -Path $mirrorDir | Out-Null
+        }
+        [System.IO.File]::WriteAllText($mirrorPath, $PatchedHtml, [System.Text.UTF8Encoding]::new($false))
+        $written += $mirrorPath
+    }
+    return $written
+}
+
+function Test-WorkbenchPatched {
+    param([string]$Path)
+    return (Test-Path $Path) -and ((Get-Content $Path -Raw -Encoding UTF8) -match 'VSCODE-CUSTOM-CSS-START')
 }
 
 function Patch-Workbench {
@@ -265,8 +344,16 @@ function Patch-Workbench {
 "@
     $html = $html -replace '</html>', "$inject</html>"
     [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
-    $productKey = Update-ProductJsonChecksum -ProductJsonPath $ProductJson -WorkbenchHtmlPath $WorkbenchHtml
-    Write-Ok "Patched workbench.html + product.json ($productKey)"
+
+    $patchedPaths = @($WorkbenchHtml)
+    $mirrored = Sync-CustomCssWorkbenchMirrors -PatchedHtml $html -MirrorPaths $CustomCssWorkbenchPaths -SkipPath $WorkbenchHtml
+    foreach ($mirrorPath in $mirrored) {
+        $patchedPaths += $mirrorPath
+        Write-Ok "Mirrored patch to $mirrorPath"
+    }
+
+    $productKeys = Update-AllWorkbenchChecksums -ProductJsonPath $ProductJson -WorkbenchHtmlPaths $patchedPaths
+    Write-Ok ("Patched workbench + product.json ({0})" -f (($productKeys | Select-Object -Unique) -join ', '))
 }
 
 $label = if ($Insiders) { "VS Code Insiders" } else { "VS Code" }
@@ -292,6 +379,11 @@ Write-Step "Installing theme: $($entry.name) ($($entry.id)) for $label"
 Write-Ok $entry.description
 Write-Ok "VS Code: $($vscodePaths.CodeExe)"
 Write-Ok "Workbench: $WorkbenchHtml"
+Write-Ok "Custom CSS targets (electron-sandbox):"
+foreach ($target in $CustomCssWorkbenchPaths) {
+    $exists = if (Test-Path $target) { "exists" } else { "will create" }
+    Write-Ok "  $target ($exists)"
+}
 
 Write-Step "Copying files to $ThemeDir"
 New-Item -ItemType Directory -Force -Path (Join-Path $ThemeDir "presets") | Out-Null
@@ -339,6 +431,21 @@ if ($entry.mode -eq "light") {
 Merge-Settings $settingsPatch
 Write-Ok "settings.json updated (base theme: $baseTheme)"
 
+$cssCheck = Test-CustomCssExtension
+if ($cssCheck.Wrong.Count -gt 0) {
+    Write-Warn "Wrong Custom CSS extension(s) detected (uninstall these):"
+    foreach ($ext in $cssCheck.Wrong) {
+        $pkg = Join-Path $ext.FullName "package.json"
+        $label = $ext.Name
+        if (Test-Path $pkg) {
+            $meta = Get-Content $pkg -Raw -Encoding UTF8 | ConvertFrom-Json
+            $label = "$($meta.publisher).$($meta.name) ($($meta.displayName))"
+        }
+        Write-Warn "  $label"
+    }
+    Write-Warn "Required: be5invis.vscode-custom-css (marketplace display name: Custom CSS and JS Loader)"
+}
+
 if (-not $SkipExtensions) {
     Write-Step "Installing required extensions"
     Install-ExtensionVsix `
@@ -347,6 +454,8 @@ if (-not $SkipExtensions) {
     Install-ExtensionVsix `
         -Url "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/RimuruChan/vsextensions/vscode-fix-checksums-next/1.4.0/vspackage" `
         -OutName "vscode-fix-checksums-next-1.4.0.vsix"
+} elseif (-not $cssCheck.Correct) {
+    Write-Warn "Extension be5invis.vscode-custom-css not found. Re-run without -SkipExtensions."
 }
 
 if (-not $SkipWorkbenchPatch) {
@@ -359,13 +468,22 @@ if (-not $SkipWorkbenchPatch) {
     }
 }
 
-$cssExt = Get-ChildItem $ExtRoot -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-$patched = (Test-Path $WorkbenchHtml) -and ((Get-Content $WorkbenchHtml -Raw) -match 'VSCODE-CUSTOM-CSS-START')
+$cssExt = $cssCheck.Correct
+$patchedPrimary = Test-WorkbenchPatched -Path $WorkbenchHtml
+$patchedSandbox = ($CustomCssWorkbenchPaths | ForEach-Object { Test-WorkbenchPatched -Path $_ }) -notcontains $false
+$patched = $patchedPrimary -and $patchedSandbox
+$esmPath = ($CustomCssWorkbenchPaths | Where-Object { $_ -match 'workbench\.esm\.html$' } | Select-Object -First 1)
+
 if (-not $cssExt) {
-    Write-Warn "Extension Custom CSS and JS not found in $ExtRoot. Re-run installer without the SkipExtensions flag."
+    Write-Warn "Extension be5invis.vscode-custom-css not found in $ExtRoot. Re-run without -SkipExtensions."
 }
 if (-not $patched -and -not $SkipWorkbenchPatch) {
-    Write-Warn "workbench.html was not patched. Close VS Code and run installer again as Administrator."
+    Write-Warn "Workbench was not fully patched. Close VS Code and run installer again as Administrator."
+} elseif ($patched) {
+    Write-Ok "Workbench pre-patched (browser + electron-sandbox mirrors)"
+    if ($esmPath -and (Test-Path $esmPath)) {
+        Write-Ok "workbench.esm.html ready at $esmPath"
+    }
 }
 
 Write-Host ""
@@ -373,9 +491,22 @@ Write-Host "  Done! Theme: $($entry.name) on $label" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Next steps:" -ForegroundColor Green
 Write-Host "    1. Fully quit and restart VS Code" -ForegroundColor Green
-Write-Host "    2. Command Palette - Enable Custom CSS and JS" -ForegroundColor Green
-Write-Host "    3. Command Palette - Fix Checksums Apply" -ForegroundColor Green
-Write-Host "    4. Restart again" -ForegroundColor Green
+if ($patched) {
+    Write-Host "    2. Command Palette - Fix Checksums: Apply" -ForegroundColor Green
+    Write-Host "    3. Restart again" -ForegroundColor Green
+    Write-Host "       (Enable Custom CSS and JS is optional - workbench is already patched)" -ForegroundColor DarkGreen
+} else {
+    Write-Host "    2. Run VS Code as Administrator" -ForegroundColor Green
+    Write-Host "    3. Command Palette - Enable Custom CSS and JS" -ForegroundColor Green
+    Write-Host "    4. Command Palette - Fix Checksums: Apply" -ForegroundColor Green
+    Write-Host "    5. Restart again" -ForegroundColor Green
+}
+Write-Host ""
+Write-Host "  Verify patch:" -ForegroundColor Green
+Write-Host "    Select-String -Path `"$($CustomCssWorkbenchPaths[0])`" -Pattern VSCODE-CUSTOM-CSS-START" -ForegroundColor DarkGreen
+if ($esmPath) {
+    Write-Host "    Select-String -Path `"$esmPath`" -Pattern VSCODE-CUSTOM-CSS-START" -ForegroundColor DarkGreen
+}
 Write-Host ""
 Write-Host "  Switch theme:" -ForegroundColor Green
 Write-Host "    powershell -ExecutionPolicy Bypass -File `"$($MyInvocation.MyCommand.Path)`" -Theme $($entry.id)" -ForegroundColor Green

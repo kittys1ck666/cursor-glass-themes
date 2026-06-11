@@ -19,11 +19,31 @@ function Resolve-VSCodePaths {
             Where-Object { $_.FullName -match '[\\/]resources[\\/]app[\\/]product\.json$' } |
             Select-Object -First 1
         if (-not $product) { continue }
-        $workbench = Get-ChildItem $product.Directory.FullName -Recurse -Filter "workbench.html" -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -match '[\\/]workbench[\\/]workbench\.html$' } |
-            Select-Object -First 1
-        if ($workbench) {
-            return @{ WorkbenchHtml = $workbench.FullName; ProductJson = $product.FullName }
+
+        $appDir = $product.Directory.FullName
+        $vsCodeDir = Join-Path $appDir "out\vs\code"
+        $browserWb = Join-Path $vsCodeDir "electron-browser\workbench\workbench.html"
+        $sandboxWb = Join-Path $vsCodeDir "electron-sandbox\workbench\workbench.html"
+        $sandboxEsmWb = Join-Path $vsCodeDir "electron-sandbox\workbench\workbench.esm.html"
+
+        $canonical = $null
+        foreach ($candidate in @($browserWb, $sandboxWb, $sandboxEsmWb)) {
+            if (Test-Path $candidate) { $canonical = $candidate; break }
+        }
+        if (-not $canonical) {
+            $workbench = Get-ChildItem $appDir -Recurse -Filter "workbench.html" -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match '[\\/]workbench[\\/]workbench\.html$' } |
+                Select-Object -First 1
+            if (-not $workbench) { continue }
+            $canonical = $workbench.FullName
+        }
+
+        $customCssPaths = @($sandboxWb, $sandboxEsmWb)
+
+        return @{
+            WorkbenchHtml             = $canonical
+            CustomCssWorkbenchPaths   = $customCssPaths
+            ProductJson               = $product.FullName
         }
     }
     return $null
@@ -31,6 +51,7 @@ function Resolve-VSCodePaths {
 
 $vscodePaths = Resolve-VSCodePaths -FolderName $AppFolder
 $WorkbenchHtml = if ($vscodePaths) { $vscodePaths.WorkbenchHtml } else { $null }
+$CustomCssWorkbenchPaths = if ($vscodePaths) { $vscodePaths.CustomCssWorkbenchPaths } else { @() }
 $ProductJson = if ($vscodePaths) { $vscodePaths.ProductJson } else { $null }
 
 function Get-RelativePathCompat {
@@ -59,16 +80,31 @@ function Update-ProductJsonChecksum {
     [System.IO.File]::WriteAllText($ProductJsonPath, $product, [System.Text.UTF8Encoding]::new($false))
 }
 
-Write-Host "`n==> Removing workbench patch" -ForegroundColor Cyan
-if ($WorkbenchHtml -and (Test-Path $WorkbenchHtml)) {
-    $html = Get-Content $WorkbenchHtml -Raw -Encoding UTF8
+function Remove-WorkbenchPatch {
+    param([string]$Path)
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    $html = Get-Content $Path -Raw -Encoding UTF8
+    if ($html -notmatch 'VSCODE-CUSTOM-CSS-START') { return $false }
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', ''
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', ''
-    [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
+    [System.IO.File]::WriteAllText($Path, $html, [System.Text.UTF8Encoding]::new($false))
     if ($ProductJson -and (Test-Path $ProductJson)) {
-        Update-ProductJsonChecksum -ProductJsonPath $ProductJson -WorkbenchHtmlPath $WorkbenchHtml
+        Update-ProductJsonChecksum -ProductJsonPath $ProductJson -WorkbenchHtmlPath $Path
     }
-    Write-Host "    workbench.html restored" -ForegroundColor Green
+    return $true
+}
+
+Write-Host "`n==> Removing workbench patch" -ForegroundColor Cyan
+$restored = @()
+if (Remove-WorkbenchPatch -Path $WorkbenchHtml) { $restored += $WorkbenchHtml }
+foreach ($mirrorPath in ($CustomCssWorkbenchPaths | Select-Object -Unique)) {
+    if ($mirrorPath -eq $WorkbenchHtml) { continue }
+    if (Remove-WorkbenchPatch -Path $mirrorPath) { $restored += $mirrorPath }
+}
+if ($restored.Count -gt 0) {
+    foreach ($path in $restored) { Write-Host "    restored $path" -ForegroundColor Green }
+} else {
+    Write-Host "    no glass patch found" -ForegroundColor Yellow
 }
 
 Write-Host "`n==> Cleaning settings.json" -ForegroundColor Cyan
