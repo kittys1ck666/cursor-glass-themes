@@ -1,6 +1,9 @@
 /* Glass base — colors come from theme/presets/*.css (load preset BEFORE this file) */
 
 :root {
+  --a-surface-border: var(--a-bubble-edge);
+  --a-surface-bg: var(--a-glass-light);
+  --a-surface-header: var(--a-glass);
   --a-glass-panel: var(--a-glass-light);
   --a-blur-panel: var(--a-blur-light);
   --a-glass-sidebar: var(--a-glass-light);
@@ -554,6 +557,78 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
 
 .markdown-root a { color: var(--a-link) !important; }
 .markdown-root code { background: var(--a-code-bg) !important; color: var(--a-code-fg) !important; }
+
+/* Tables & listings — bordered surfaces (all presets, Agents + IDE) */
+.markdown-root table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 1px solid var(--a-surface-border) !important;
+  border-radius: var(--a-radius) !important;
+  overflow: hidden !important;
+  background: var(--a-surface-bg) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.4) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  margin: 10px 0 !important;
+}
+
+.markdown-root table th,
+.markdown-root table td {
+  border: 1px solid var(--a-surface-border) !important;
+  padding: 6px 10px !important;
+  color: var(--a-fg) !important;
+  vertical-align: top !important;
+}
+
+.markdown-root table th {
+  background: var(--a-surface-header) !important;
+  color: var(--a-fg-bright) !important;
+  font-weight: 600 !important;
+}
+
+.markdown-root table tr:nth-child(even) td {
+  background: var(--a-hover-bg) !important;
+}
+
+.markdown-root > ul,
+.markdown-root > ol,
+.markdown-root blockquote {
+  border: 1px solid var(--a-surface-border) !important;
+  border-radius: calc(var(--a-radius) - 2px) !important;
+  background: var(--a-surface-bg) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  margin: 8px 0 !important;
+}
+
+.markdown-root > ul,
+.markdown-root > ol {
+  padding: 8px 12px 8px 28px !important;
+}
+
+.markdown-root blockquote {
+  padding: 8px 12px !important;
+  border-left-width: 3px !important;
+  color: var(--a-fg) !important;
+}
+
+.markdown-root li > ul,
+.markdown-root li > ol {
+  border: none !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  padding: 4px 0 4px 20px !important;
+  margin: 4px 0 !important;
+}
+
+.ui-scroll-area .markdown-root table,
+.composer-human-message .markdown-root table,
+.composer-tool-call-container .markdown-root table {
+  border: 1px solid var(--a-surface-border) !important;
+}
 
 .ui-prompt-input [contenteditable], .ui-prompt-input-editor__input {
   color: var(--a-fg-bright) !important;

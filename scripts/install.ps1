@@ -62,6 +62,58 @@ function To-FileUrl([string]$Path) {
     return "file://$p"
 }
 
+function Get-WorkbenchColorCustomizations {
+    param([string]$PresetCss, [string]$Mode)
+
+    $base = if ($Mode -eq 'light') { '#f6f6f4' } else { '#191c22' }
+    if ($PresetCss -match '--a-wb-surface:\s*(#[0-9a-fA-F]{6})') {
+        $base = $matches[1]
+    } elseif ($PresetCss -match '--a-bg:\s*(#[0-9a-fA-F]{6})') {
+        $base = $matches[1]
+    }
+
+    $h = $base.TrimStart('#')
+    function Alpha([string]$Hex, [string]$Suffix) { return "#$Hex$Suffix" }
+
+    $widgetBg = if ($Mode -eq 'light') { Alpha $h 'ee' } else { Alpha $h 'dd' }
+    $widgetBgSolid = if ($Mode -eq 'light') { Alpha $h 'f5' } else { Alpha $h 'ee' }
+
+    return @{
+        'editor.background'                   = Alpha $h '00'
+        'sideBar.background'                  = Alpha $h '00'
+        'activityBar.background'              = Alpha $h '00'
+        'panel.background'                    = Alpha $h '00'
+        'editorGroupHeader.tabsBackground'    = Alpha $h '00'
+        'editorGroupHeader.noTabsBackground'  = Alpha $h '00'
+        'statusBar.background'                = Alpha $h '00'
+        'titleBar.activeBackground'           = Alpha $h '00'
+        'titleBar.inactiveBackground'         = Alpha $h '00'
+        'tab.activeBackground'                = Alpha $h '30'
+        'tab.inactiveBackground'              = Alpha $h '15'
+        'tab.hoverBackground'                 = Alpha $h '30'
+        'tab.unfocusedHoverBackground'        = Alpha $h '20'
+        'sideBarSectionHeader.background'     = Alpha $h '20'
+        'list.activeSelectionBackground'      = Alpha $h '40'
+        'list.inactiveSelectionBackground'    = Alpha $h '25'
+        'list.hoverBackground'                = Alpha $h '25'
+        'list.focusBackground'                = Alpha $h '40'
+        'editorWidget.background'             = $widgetBg
+        'editorSuggestWidget.background'      = $widgetBgSolid
+        'editorHoverWidget.background'        = $widgetBg
+        'peekViewEditor.background'           = Alpha $h 'cc'
+        'peekViewResult.background'           = Alpha $h 'cc'
+        'peekViewTitle.background'            = $widgetBg
+        'input.background'                    = Alpha $h '55'
+        'dropdown.background'                 = $widgetBg
+        'menu.background'                     = $widgetBgSolid
+        'notifications.background'            = $widgetBgSolid
+        'debugToolBar.background'             = $widgetBg
+        'breadcrumb.background'               = Alpha $h '00'
+        'breadcrumbPicker.background'         = $widgetBg
+        'terminal.background'                 = Alpha $h '00'
+    }
+}
+
 function Merge-Settings {
     param([hashtable]$Patch)
     $dir = Split-Path $SettingsPath -Parent
@@ -177,6 +229,7 @@ $entry = Resolve-ThemeEntry -Id $Theme -ManifestObj $Manifest
 $PresetSrc  = Join-Path $RepoRoot ($entry.preset -replace '/', '\')
 $BaseSrc    = Join-Path $RepoRoot "theme\glass-base.css"
 $IdeSrc     = Join-Path $RepoRoot "theme\ide-agent.css"
+$WbSrc      = Join-Path $RepoRoot "theme\ide-workbench.css"
 $MarbleSrc  = Join-Path $RepoRoot "theme\marble.js"
 
 if (-not (Test-Path $PresetSrc)) { throw "Preset not found: $PresetSrc" }
@@ -189,6 +242,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $ThemeDir "presets") | Out-
 Copy-Item $PresetSrc (Join-Path $ThemeDir "presets\$($entry.id).css") -Force
 Copy-Item $BaseSrc (Join-Path $ThemeDir "glass-base.css") -Force
 Copy-Item $IdeSrc (Join-Path $ThemeDir "ide-agent.css") -Force
+Copy-Item $WbSrc (Join-Path $ThemeDir "ide-workbench.css") -Force
 Copy-Item $MarbleSrc (Join-Path $ThemeDir "marble.js") -Force
 Get-ChildItem (Join-Path $RepoRoot "theme\presets\*.css") | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $ThemeDir "presets\$($_.Name)") -Force
@@ -199,10 +253,12 @@ Write-Ok "Theme files copied"
 $PresetPath = Join-Path $ThemeDir "presets\$($entry.id).css"
 $BasePath   = Join-Path $ThemeDir "glass-base.css"
 $IdePath    = Join-Path $ThemeDir "ide-agent.css"
+$WbPath     = Join-Path $ThemeDir "ide-workbench.css"
 $JsPath     = Join-Path $ThemeDir "marble.js"
 $BundlePath = Join-Path $ThemeDir "active-glass.css"
 
-$combined = (Get-Content $PresetPath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $BasePath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $IdePath -Raw -Encoding UTF8)
+$presetRaw = Get-Content $PresetPath -Raw -Encoding UTF8
+$combined = $presetRaw + "`n`n" + (Get-Content $BasePath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $IdePath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $WbPath -Raw -Encoding UTF8)
 [System.IO.File]::WriteAllText($BundlePath, $combined, [System.Text.UTF8Encoding]::new($false))
 
 Write-Step "Updating Cursor settings"
@@ -210,12 +266,15 @@ $imports = @(
     (To-FileUrl $PresetPath),
     (To-FileUrl $BasePath),
     (To-FileUrl $IdePath),
+    (To-FileUrl $WbPath),
     (To-FileUrl $JsPath)
 )
 $settingsPatch = @{
     "cursor.general.reduceTransparency" = $false
     "vscode_custom_css.imports"           = $imports
     "vscode_custom_css.statusbar"         = $true
+    "workbench.colorCustomizations"       = (Get-WorkbenchColorCustomizations -PresetCss $presetRaw -Mode $entry.mode)
+    "window.titleBarStyle"                = "custom"
 }
 if ($entry.mode -eq "light") {
     $settingsPatch["workbench.preferredLightColorTheme"] = $entry.cursorTheme

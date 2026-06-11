@@ -28,7 +28,9 @@ if (Test-Path $SettingsPath) {
     @(
         'vscode_custom_css.imports',
         'vscode_custom_css.statusbar',
-        'cursor.general.reduceTransparency'
+        'cursor.general.reduceTransparency',
+        'workbench.colorCustomizations',
+        'window.titleBarStyle'
     ) | ForEach-Object {
         $p = $obj.PSObject.Properties[$_]
         if ($p) { $p.Value = $null; $obj.PSObject.Properties.Remove($_) }

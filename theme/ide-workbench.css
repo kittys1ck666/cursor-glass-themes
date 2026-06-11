@@ -1,0 +1,172 @@
+/* =============================================================================
+   Classic IDE workbench — full glass over WebGL marble
+   Inspired by https://github.com/ramonclaudio/cursor-ai-liquid-glass-themes
+   Scope: classic Cursor IDE only (not Agents glass window)
+   ============================================================================= */
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench {
+  background: transparent !important;
+  background-color: transparent !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-sideBar-background: transparent !important;
+  --vscode-panel-background: transparent !important;
+  --vscode-activityBar-background: transparent !important;
+  --vscode-titleBar-activeBackground: transparent !important;
+  --vscode-titleBar-inactiveBackground: transparent !important;
+  --vscode-statusBar-background: transparent !important;
+  --vscode-tab-activeBackground: var(--a-glass) !important;
+  --vscode-tab-inactiveBackground: transparent !important;
+  --vscode-list-hoverBackground: var(--a-hover-bg) !important;
+  --vscode-list-activeSelectionBackground: var(--a-hover-bg) !important;
+  --vscode-input-background: var(--a-glass-input) !important;
+  --vscode-dropdown-background: var(--a-glass-panel) !important;
+  --vscode-menu-background: var(--a-glass-panel) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part > .content {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Activity bar */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.activitybar,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.activitybar > .content {
+  background: var(--a-glass-panel) !important;
+  background-color: var(--a-glass-panel) !important;
+  backdrop-filter: blur(var(--a-blur-panel)) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-panel)) saturate(1.3) !important;
+  border-right: 1px solid var(--a-bubble-edge) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.activitybar .action-label,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.activitybar .codicon {
+  color: var(--a-sidebar-fg) !important;
+}
+
+/* Sidebar */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.sidebar > .content,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.sidebar .composite.title {
+  background: var(--a-glass-panel) !important;
+  background-color: var(--a-glass-panel) !important;
+  backdrop-filter: blur(var(--a-blur-panel)) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-panel)) saturate(1.3) !important;
+  border-right: 1px solid var(--a-bubble-edge) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-sidebar-fg) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.sidebar .monaco-list-row,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.sidebar .label-name,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.sidebar .monaco-icon-label {
+  color: var(--a-fg-bright) !important;
+}
+
+/* Editor area */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor > .content {
+  background: var(--a-glass-light) !important;
+  background-color: var(--a-glass-light) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-shell-shadow) !important;
+  overflow: hidden !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .monaco-editor,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .monaco-editor-background,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .margin,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .monaco-scrollable-element.editor-scrollable {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Tabs */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .editor-group-container > .title {
+  background: transparent !important;
+  border-bottom: 1px solid var(--a-bubble-edge) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .tabs-container > .tab.active {
+  background: var(--a-glass) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-bottom-color: transparent !important;
+  border-radius: calc(var(--a-radius) - 2px) calc(var(--a-radius) - 2px) 0 0 !important;
+  color: var(--a-fg-bright) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .tabs-container > .tab:not(.active) {
+  background: transparent !important;
+  color: var(--a-muted) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor .tabs-container > .tab:hover {
+  background: var(--a-hover-bg) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+/* Bottom panel (terminal, problems, etc.) */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel > .content,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .composite.title {
+  background: var(--a-glass-panel) !important;
+  background-color: var(--a-glass-panel) !important;
+  backdrop-filter: blur(var(--a-blur-panel)) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-panel)) saturate(1.3) !important;
+  border-top: 1px solid var(--a-bubble-edge) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .monaco-editor,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .monaco-editor-background {
+  background: transparent !important;
+}
+
+/* Title bar + status bar */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.titlebar {
+  background: var(--a-header-bar) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  border-bottom: 1px solid var(--a-bubble-edge) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.statusbar {
+  background: var(--a-header-bar) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.35) !important;
+  border-top: 1px solid var(--a-bubble-edge) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+/* Explorer / tree listings */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .monaco-list .monaco-list-row {
+  border-radius: calc(var(--a-radius) - 4px) !important;
+  box-shadow: inset 0 -1px 0 var(--a-bubble-edge) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .monaco-list .monaco-list-row.selected,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .monaco-list .monaco-list-row.focused {
+  outline: 1px solid var(--a-bubble-edge) !important;
+  outline-offset: -1px !important;
+  background: var(--a-hover-bg) !important;
+}
+
+/* Widgets */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .quick-input-widget,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .suggest-widget,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .monaco-hover,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .editor-widget {
+  background: var(--a-glass-panel) !important;
+  backdrop-filter: blur(var(--a-blur-panel)) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-panel)) saturate(1.4) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.banner {
+  background: transparent !important;
+}

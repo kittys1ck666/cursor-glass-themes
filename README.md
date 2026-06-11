@@ -1,10 +1,11 @@
 # Cursor Glass Themes
 
-Glassmorphism themes for the **Cursor Agents window** (sidebar · chat · editor).
+Glassmorphism themes for **Cursor** — full classic IDE + **Agents glass window**.
 
-- Frosted glass panels, chat bubbles, menubar
+- Frosted glass panels, chat bubbles, menubar, sidebar, editor, terminal
 - **WebGL animated marble** background (colors match each theme)
 - **8 presets** — dark & light, including readable black text on light themes
+- Bordered tables & listings in chat (readable on marble)
 
 > Unofficial mod. Re-run installer after Cursor updates.
 
@@ -68,8 +69,9 @@ cursor-glass-themes/
 │   │   ├── abyss.css
 │   │   ├── sakura.css
 │   │   └── ...
-│   ├── glass-base.css       # layout & glass rules (Agents window)
-│   ├── ide-agent.css        # classic IDE agent sidebar (.part.auxiliarybar)
+│   ├── glass-base.css       # shared glass + chat tables/lists
+│   ├── ide-agent.css        # IDE agent sidebar (.part.auxiliarybar)
+│   ├── ide-workbench.css    # full classic IDE workbench glass
 │   └── marble.js            # WebGL bg (reads --a-marble-* vars)
 └── scripts/
     ├── install.ps1
@@ -77,7 +79,7 @@ cursor-glass-themes/
     └── uninstall.ps1
 ```
 
-Installed to `~/.cursor/cursor-glass-themes/` with `active-theme.json`.
+Installed to `~/.cursor/cursor-abyss-glass/` with `active-theme.json`.
 
 ## Custom theme
 
@@ -112,13 +114,19 @@ Key variables:
 powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
 ```
 
+## Inspiration & credits
+
+Classic IDE glass styling (transparent workbench shells, tabs, lists, widgets) is inspired by **[cursor-ai-liquid-glass-themes](https://github.com/ramonclaudio/cursor-ai-liquid-glass-themes)** by [**ramonclaudio**](https://github.com/ramonclaudio) — a great liquid glass mod for Cursor. That project showed how to make the full IDE feel glassy; we built on that idea with our **WebGL marble engine**, **8 color presets**, **Agents window** support, and **IDE agent sidebar** parity.
+
+Also uses [vscode-custom-css](https://github.com/be5invis/vscode-custom-css) and [Fix VSCode Checksums Next](https://marketplace.visualstudio.com/items?itemName=RimuruChan.vscode-fix-checksums-next).
+
 ## Compared to other projects
 
-| Project | Agents window | Theme variants | WebGL marble |
-|---------|---------------|----------------|--------------|
-| [cursor-ai-liquid-glass-themes](https://github.com/ramonclaudio/cursor-ai-liquid-glass-themes) | No | 1 (Midnight) | OS acrylic |
-| Forum CSS workarounds | Partial | 1 color tweak | No |
-| **This repo** | **Full** | **8 presets** | **Yes** |
+| Project | Full IDE | Agents window | Theme variants | WebGL marble |
+|---------|----------|---------------|----------------|--------------|
+| [cursor-ai-liquid-glass-themes](https://github.com/ramonclaudio/cursor-ai-liquid-glass-themes) | **Yes** (vibrancy) | No | 1 (Midnight) | OS acrylic |
+| Forum CSS workarounds | Partial | Partial | 1 tweak | No |
+| **This repo** | **Yes** (CSS + marble) | **Full** | **8 presets** | **Yes** |
 
 ## License
 

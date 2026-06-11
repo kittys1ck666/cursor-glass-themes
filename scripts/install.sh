@@ -88,6 +88,7 @@ mkdir -p "$THEME_DIR/presets"
 cp "$PRESET_SRC" "$THEME_DIR/presets/$THEME_ID.css"
 cp "$REPO_ROOT/theme/glass-base.css" "$THEME_DIR/glass-base.css"
 cp "$REPO_ROOT/theme/ide-agent.css" "$THEME_DIR/ide-agent.css"
+cp "$REPO_ROOT/theme/ide-workbench.css" "$THEME_DIR/ide-workbench.css"
 cp "$REPO_ROOT/theme/marble.js" "$THEME_DIR/marble.js"
 cp "$REPO_ROOT"/theme/presets/*.css "$THEME_DIR/presets/"
 printf '%s\n' "{\"id\":\"$THEME_ID\",\"name\":\"$THEME_NAME\",\"mode\":\"$THEME_MODE\"}" > "$THEME_DIR/active-theme.json"
@@ -95,21 +96,72 @@ printf '%s\n' "{\"id\":\"$THEME_ID\",\"name\":\"$THEME_NAME\",\"mode\":\"$THEME_
 PRESET_PATH="$THEME_DIR/presets/$THEME_ID.css"
 BASE_PATH="$THEME_DIR/glass-base.css"
 IDE_PATH="$THEME_DIR/ide-agent.css"
+WB_PATH="$THEME_DIR/ide-workbench.css"
 JS_PATH="$THEME_DIR/marble.js"
 BUNDLE_PATH="$THEME_DIR/active-glass.css"
-cat "$PRESET_PATH" "$BASE_PATH" "$IDE_PATH" > "$BUNDLE_PATH"
+cat "$PRESET_PATH" "$BASE_PATH" "$IDE_PATH" "$WB_PATH" > "$BUNDLE_PATH"
 
 echo "==> Updating settings.json"
 mkdir -p "$(dirname "$SETTINGS_PATH")"
-python3 - "$SETTINGS_PATH" "$(to_file_url "$PRESET_PATH")" "$(to_file_url "$BASE_PATH")" "$(to_file_url "$IDE_PATH")" "$(to_file_url "$JS_PATH")" "$CURSOR_THEME" "$THEME_MODE" <<'PY'
-import json, pathlib, sys
-path, preset, base, ide, js, cursor_theme, mode = sys.argv[1:8]
+python3 - "$SETTINGS_PATH" "$(to_file_url "$PRESET_PATH")" "$(to_file_url "$BASE_PATH")" "$(to_file_url "$IDE_PATH")" "$(to_file_url "$WB_PATH")" "$(to_file_url "$JS_PATH")" "$CURSOR_THEME" "$THEME_MODE" "$PRESET_PATH" <<'PY'
+import json, pathlib, re, sys
+path, preset_url, base, ide, wb, js, cursor_theme, mode, preset_path = sys.argv[1:10]
+preset_css = pathlib.Path(preset_path).read_text(encoding="utf-8")
+base_hex = "#f6f6f4" if mode == "light" else "#191c22"
+m = re.search(r"--a-wb-surface:\s*(#[0-9a-fA-F]{6})", preset_css)
+if m:
+    base_hex = m.group(1)
+else:
+    m = re.search(r"--a-bg:\s*(#[0-9a-fA-F]{6})", preset_css)
+    if m:
+        base_hex = m.group(1)
+h = base_hex.lstrip("#")
+def a(suffix):
+    return f"#{h}{suffix}"
+widget = a("ee") if mode == "light" else a("dd")
+widget_solid = a("f5") if mode == "light" else a("ee")
+colors = {
+    "editor.background": a("00"),
+    "sideBar.background": a("00"),
+    "activityBar.background": a("00"),
+    "panel.background": a("00"),
+    "editorGroupHeader.tabsBackground": a("00"),
+    "editorGroupHeader.noTabsBackground": a("00"),
+    "statusBar.background": a("00"),
+    "titleBar.activeBackground": a("00"),
+    "titleBar.inactiveBackground": a("00"),
+    "tab.activeBackground": a("30"),
+    "tab.inactiveBackground": a("15"),
+    "tab.hoverBackground": a("30"),
+    "tab.unfocusedHoverBackground": a("20"),
+    "sideBarSectionHeader.background": a("20"),
+    "list.activeSelectionBackground": a("40"),
+    "list.inactiveSelectionBackground": a("25"),
+    "list.hoverBackground": a("25"),
+    "list.focusBackground": a("40"),
+    "editorWidget.background": widget,
+    "editorSuggestWidget.background": widget_solid,
+    "editorHoverWidget.background": widget,
+    "peekViewEditor.background": a("cc"),
+    "peekViewResult.background": a("cc"),
+    "peekViewTitle.background": widget,
+    "input.background": a("55"),
+    "dropdown.background": widget,
+    "menu.background": widget_solid,
+    "notifications.background": widget_solid,
+    "debugToolBar.background": widget,
+    "breadcrumb.background": a("00"),
+    "breadcrumbPicker.background": widget,
+    "terminal.background": a("00"),
+}
 data = {}
 if pathlib.Path(path).exists() and pathlib.Path(path).read_text(encoding="utf-8").strip():
     data = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
 data["cursor.general.reduceTransparency"] = False
-data["vscode_custom_css.imports"] = [preset, base, ide, js]
+data["vscode_custom_css.imports"] = [preset_url, base, ide, wb, js]
 data["vscode_custom_css.statusbar"] = True
+data["workbench.colorCustomizations"] = colors
+data["window.titleBarStyle"] = "custom"
 if mode == "light":
     data["workbench.preferredLightColorTheme"] = cursor_theme
     data["window.autoDetectColorScheme"] = False
