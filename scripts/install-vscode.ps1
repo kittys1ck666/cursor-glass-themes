@@ -31,11 +31,47 @@ $RequiredCssExtId = "be5invis.vscode-custom-css"
 
 function Get-CustomCssMirrorPaths {
     param([string]$VsCodeDir)
-    $dir = Join-Path $VsCodeDir "electron-sandbox\workbench"
+    $sandboxDir = Join-Path $VsCodeDir "electron-sandbox\workbench"
     return @(
-        (Join-Path $dir "workbench.html"),
-        (Join-Path $dir "workbench.esm.html")
+        (Join-Path $sandboxDir "workbench.html"),
+        (Join-Path $sandboxDir "workbench.esm.html"),
+        (Join-Path $VsCodeDir "electron-browser\workbench\workbench.html")
     )
+}
+
+function Clear-WorkbenchPatches {
+    param([string]$Html)
+    $Html = $Html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', ''
+    $Html = $Html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', ''
+    return $Html
+}
+
+function Strip-WorkbenchCsp {
+    param([string]$Html)
+    return $Html -replace '(?s)<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?/>', ''
+}
+
+function Get-PristineWorkbenchHtml {
+    param([string[]]$Paths)
+    foreach ($p in $Paths) {
+        if (-not $p) { continue }
+        $dir = Split-Path $p -Parent
+        $bak = Get-ChildItem $dir -Filter "workbench.*.bak-custom-css" -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($bak) {
+            $raw = Get-Content $bak.FullName -Raw -Encoding UTF8
+            if ($raw -notmatch 'VSCODE-CUSTOM-CSS-START') {
+                Write-Ok "Using pre-patch backup: $($bak.Name)"
+                return (Clear-WorkbenchPatches $raw)
+            }
+        }
+    }
+    foreach ($p in $Paths) {
+        if ($p -and (Test-Path $p)) {
+            return (Clear-WorkbenchPatches (Get-Content $p -Raw -Encoding UTF8))
+        }
+    }
+    throw "workbench.html template not found"
 }
 
 function Test-CustomCssExtension {
@@ -72,8 +108,9 @@ function Resolve-VSCodePaths {
         $sandboxWb = Join-Path $vsCodeDir "electron-sandbox\workbench\workbench.html"
         $sandboxEsmWb = Join-Path $vsCodeDir "electron-sandbox\workbench\workbench.esm.html"
 
+        # VS Code + be5invis load electron-sandbox/workbench/workbench.html (not browser).
         $canonical = $null
-        foreach ($candidate in @($browserWb, $sandboxWb, $sandboxEsmWb)) {
+        foreach ($candidate in @($sandboxWb, $sandboxEsmWb, $browserWb)) {
             if (Test-Path $candidate) { $canonical = $candidate; break }
         }
         if (-not $canonical) {
@@ -319,7 +356,15 @@ function Test-WorkbenchPatched {
 
 function Patch-Workbench {
     param([string]$CombinedCss, [string]$JsContent)
-    if (-not (Test-Path $WorkbenchHtml)) { throw "workbench.html not found at $WorkbenchHtml" }
+    $templatePaths = @(
+        $vscodePaths.SandboxWorkbenchHtml,
+        $vscodePaths.SandboxEsmWorkbenchHtml,
+        (Join-Path $vscodePaths.VsCodeDir "electron-browser\workbench\workbench.html")
+    )
+    if (-not ($templatePaths | Where-Object { $_ -and (Test-Path $_) })) {
+        throw "workbench.html not found under $($vscodePaths.VsCodeDir)"
+    }
+
     $indicatorPath = Join-Path $ExtRoot "be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
     if (-not (Test-Path $indicatorPath)) {
         $found = Get-ChildItem $ExtRoot -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -328,10 +373,11 @@ function Patch-Workbench {
     if (-not (Test-Path $indicatorPath)) {
         throw "statusbar.js not found. Install 'Custom CSS and JS' extension first (re-run without -SkipExtensions)."
     }
+
     $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
-    $html = Get-Content $WorkbenchHtml -Raw -Encoding UTF8
-    $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', ''
-    $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', ''
+    $html = Get-PristineWorkbenchHtml -Paths $templatePaths
+    $html = Strip-WorkbenchCsp $html
+
     $id = [guid]::NewGuid().ToString()
     $inject = @"
 <!-- !! VSCODE-CUSTOM-CSS-SESSION-ID $id !! -->
@@ -343,17 +389,21 @@ function Patch-Workbench {
 
 "@
     $html = $html -replace '</html>', "$inject</html>"
-    [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
 
-    $patchedPaths = @($WorkbenchHtml)
-    $mirrored = Sync-CustomCssWorkbenchMirrors -PatchedHtml $html -MirrorPaths $CustomCssWorkbenchPaths -SkipPath $WorkbenchHtml
-    foreach ($mirrorPath in $mirrored) {
-        $patchedPaths += $mirrorPath
-        Write-Ok "Mirrored patch to $mirrorPath"
+    $patchedPaths = @()
+    foreach ($target in ($CustomCssWorkbenchPaths | Select-Object -Unique)) {
+        if (-not $target) { continue }
+        $targetDir = Split-Path $target -Parent
+        if (-not (Test-Path $targetDir)) {
+            New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+        }
+        [System.IO.File]::WriteAllText($target, $html, [System.Text.UTF8Encoding]::new($false))
+        $patchedPaths += $target
+        Write-Ok "Patched $target"
     }
 
     $productKeys = Update-AllWorkbenchChecksums -ProductJsonPath $ProductJson -WorkbenchHtmlPaths $patchedPaths
-    Write-Ok ("Patched workbench + product.json ({0})" -f (($productKeys | Select-Object -Unique) -join ', '))
+    Write-Ok ("Updated product.json checksums ({0})" -f (($productKeys | Select-Object -Unique) -join ', '))
 }
 
 $label = if ($Insiders) { "VS Code Insiders" } else { "VS Code" }
@@ -480,7 +530,7 @@ if (-not $cssExt) {
 if (-not $patched -and -not $SkipWorkbenchPatch) {
     Write-Warn "Workbench was not fully patched. Close VS Code and run installer again as Administrator."
 } elseif ($patched) {
-    Write-Ok "Workbench pre-patched (browser + electron-sandbox mirrors)"
+    Write-Ok "Workbench pre-patched (sandbox + esm + browser mirrors, CSP stripped)"
     if ($esmPath -and (Test-Path $esmPath)) {
         Write-Ok "workbench.esm.html ready at $esmPath"
     }
@@ -493,13 +543,13 @@ Write-Host "  Next steps:" -ForegroundColor Green
 Write-Host "    1. Fully quit and restart VS Code" -ForegroundColor Green
 if ($patched) {
     Write-Host "    2. Command Palette - Fix Checksums: Apply" -ForegroundColor Green
-    Write-Host "    3. Restart again" -ForegroundColor Green
-    Write-Host "       (Enable Custom CSS and JS is optional - workbench is already patched)" -ForegroundColor DarkGreen
+    Write-Host "    3. Restart again (full quit, not Reload Window)" -ForegroundColor Green
+    Write-Host "       Do NOT run Enable Custom CSS and JS - installer already patched all workbench files." -ForegroundColor DarkGreen
 } else {
     Write-Host "    2. Run VS Code as Administrator" -ForegroundColor Green
-    Write-Host "    3. Command Palette - Enable Custom CSS and JS" -ForegroundColor Green
-    Write-Host "    4. Command Palette - Fix Checksums: Apply" -ForegroundColor Green
-    Write-Host "    5. Restart again" -ForegroundColor Green
+    Write-Host "    3. Re-run this installer, then Fix Checksums: Apply" -ForegroundColor Green
+    Write-Host "    4. Restart again (full quit)" -ForegroundColor Green
+    Write-Host "       Do NOT run Enable Custom CSS and JS - it only patches one file and breaks mirrors." -ForegroundColor DarkYellow
 }
 Write-Host ""
 Write-Host "  Verify patch:" -ForegroundColor Green

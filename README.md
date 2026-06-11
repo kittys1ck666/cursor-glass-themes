@@ -130,6 +130,13 @@ Select-String -Path (Resolve-Path $wb) -Pattern "VSCODE-CUSTOM-CSS-START"
 ```
 
 If the line matches, **Enable Custom CSS and JS** is optional.
+**Кратко (RU):**
+
+- Расширение: только **be5invis.vscode-custom-css** (в Marketplace — *Custom CSS and JS Loader*). Другие «Custom CSS» от других авторов — удалить.
+- Полностью закройте VS Code → из папки репозитория: `powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme abyss` (PowerShell от администратора, если патч не записывается).
+- Command Palette → **Enable Custom CSS and JS** → **Fix Checksums: Apply** → перезапуск.
+- После обновления VS Code — снова `install-vscode.ps1`.
+
 
 Newer VS Code builds use a versioned install folder (`1b50d58d73\resources\app\...`). The installer auto-detects `electron-browser` and mirrors patches into `electron-sandbox`.
 
