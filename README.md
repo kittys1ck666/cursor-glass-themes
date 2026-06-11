@@ -123,3 +123,5 @@ powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+yukigawa & Cursor AI
