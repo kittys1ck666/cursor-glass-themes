@@ -1,0 +1,58 @@
+/* Midnight Gold — luxury dark + champagne veins */
+:root {
+  --a-theme-id: midnight-gold;
+  --a-theme-mode: dark;
+  --a-bg: #0a0804;
+  --a-fg: #f0e8d8;
+  --a-fg-bright: #fff8ec;
+  --a-fg-heading: #ffffff;
+  --a-muted: #c4b090;
+  --a-icon-fg: #fff6e8;
+  --a-icon-filter: brightness(1.12);
+  --a-glass: rgba(20, 16, 8, 0.56);
+  --a-glass-light: rgba(24, 18, 10, 0.48);
+  --a-glass-input: rgba(28, 22, 12, 0.62);
+  --a-glass-bubble-opaque: rgba(30, 24, 14, 0.74);
+  --a-bubble-edge: rgba(220, 180, 100, 0.32);
+  --a-glass-shell-shadow: 0 8px 28px rgba(0, 4, 8, 0.5), inset 0 1px 0 rgba(255, 220, 160, 0.1);
+  --a-glass-light-shadow: 0 4px 18px rgba(0, 4, 6, 0.38), inset 0 1px 0 rgba(240, 200, 140, 0.08);
+  --a-radius: 12px;
+  --a-panel-gap: 8px;
+  --a-blur: 34px;
+  --a-blur-chat: 34px;
+  --a-blur-input: 22px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 4px rgba(4, 2, 0, 0.92);
+  --a-text-shadow-sidebar: 0 1px 3px rgba(4, 2, 0, 0.82);
+  --a-sidebar-fg: #fff8ec;
+  --a-sidebar-muted: #b8a880;
+  --a-sidebar-accent: #d8c8a0;
+  --a-link: #e8c060;
+  --a-btn-primary: #c8a040;
+  --a-btn-primary-fg: #1a1408;
+  --a-btn-primary-hover: #b89030;
+  --a-btn-secondary: rgba(28, 22, 12, 0.74);
+  --a-btn-secondary-fg: #fff8ec;
+  --a-btn-secondary-hover: rgba(180, 140, 60, 0.28);
+  --a-code-bg: rgba(16, 12, 6, 0.9);
+  --a-code-fg: #d4b050;
+  --a-header-bar: rgba(22, 16, 8, 0.78);
+  --a-hover-bg: rgba(180, 140, 60, 0.18);
+  --a-input-focus-border: rgba(220, 180, 90, 0.38);
+  --a-marble-c1: 0.03, 0.02, 0.01;
+  --a-marble-c2: 0.08, 0.06, 0.03;
+  --a-marble-c3: 0.18, 0.14, 0.06;
+  --a-marble-c4: 0.38, 0.30, 0.14;
+  --a-marble-c5: 0.62, 0.50, 0.24;
+  --a-marble-vignette: 0.46;
+  --a-marble-brightness: 0.88;
+  --a-bubble-shadow: 0 6px 24px rgba(0, 4, 6, 0.38), inset 0 1px 0 rgba(240, 200, 140, 0.08);
+  --a-code-block-bg: rgba(16, 12, 6, 0.58);
+  --a-selection-bg: rgba(220, 180, 90, 0.3);
+  --a-glow-1: rgba(160, 120, 40, 0.32);
+  --a-glow-2: rgba(100, 70, 20, 0.26);
+}
+
+html {
+  color-scheme: dark;
+}

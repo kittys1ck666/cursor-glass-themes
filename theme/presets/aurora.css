@@ -1,0 +1,58 @@
+/* Aurora — borealis teal / violet / emerald */
+:root {
+  --a-theme-id: aurora;
+  --a-theme-mode: dark;
+  --a-bg: #040a12;
+  --a-fg: #d8f5ee;
+  --a-fg-bright: #f0fffb;
+  --a-fg-heading: #ffffff;
+  --a-muted: #7ec8b8;
+  --a-icon-fg: #e8fff8;
+  --a-icon-filter: brightness(1.15) contrast(1.05);
+  --a-glass: rgba(8, 28, 32, 0.55);
+  --a-glass-light: rgba(10, 32, 38, 0.48);
+  --a-glass-input: rgba(12, 34, 40, 0.6);
+  --a-glass-bubble-opaque: rgba(10, 36, 42, 0.72);
+  --a-bubble-edge: rgba(80, 220, 180, 0.35);
+  --a-glass-shell-shadow: 0 8px 28px rgba(0, 20, 30, 0.5), inset 0 1px 0 rgba(120, 255, 220, 0.12);
+  --a-glass-light-shadow: 0 4px 18px rgba(0, 16, 24, 0.38), inset 0 1px 0 rgba(100, 230, 200, 0.1);
+  --a-radius: 12px;
+  --a-panel-gap: 8px;
+  --a-blur: 34px;
+  --a-blur-chat: 34px;
+  --a-blur-input: 22px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 4px rgba(0, 8, 12, 0.9);
+  --a-text-shadow-sidebar: 0 1px 3px rgba(0, 6, 10, 0.8);
+  --a-sidebar-fg: #f0fffb;
+  --a-sidebar-muted: #8ad4c4;
+  --a-sidebar-accent: #a8e8d8;
+  --a-link: #5ce8c8;
+  --a-btn-primary: #2ec8a8;
+  --a-btn-primary-fg: #041210;
+  --a-btn-primary-hover: #24b898;
+  --a-btn-secondary: rgba(12, 34, 40, 0.72);
+  --a-btn-secondary-fg: #f0fffb;
+  --a-btn-secondary-hover: rgba(40, 140, 120, 0.32);
+  --a-code-bg: rgba(6, 24, 28, 0.88);
+  --a-code-fg: #6effa8;
+  --a-header-bar: rgba(8, 28, 34, 0.76);
+  --a-hover-bg: rgba(40, 140, 120, 0.22);
+  --a-input-focus-border: rgba(80, 220, 180, 0.4);
+  --a-marble-c1: 0.01, 0.04, 0.08;
+  --a-marble-c2: 0.04, 0.14, 0.18;
+  --a-marble-c3: 0.08, 0.32, 0.38;
+  --a-marble-c4: 0.22, 0.48, 0.55;
+  --a-marble-c5: 0.45, 0.72, 0.65;
+  --a-marble-vignette: 0.42;
+  --a-marble-brightness: 0.92;
+  --a-bubble-shadow: 0 6px 24px rgba(0, 16, 24, 0.38), inset 0 1px 0 rgba(100, 230, 200, 0.1);
+  --a-code-block-bg: rgba(6, 24, 28, 0.58);
+  --a-selection-bg: rgba(80, 220, 180, 0.35);
+  --a-glow-1: rgba(20, 120, 100, 0.4);
+  --a-glow-2: rgba(80, 40, 140, 0.32);
+}
+
+html {
+  color-scheme: dark;
+}

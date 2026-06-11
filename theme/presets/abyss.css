@@ -1,0 +1,58 @@
+/* Abyss Blue — default */
+:root {
+  --a-theme-id: abyss;
+  --a-theme-mode: dark;
+  --a-bg: #000c18;
+  --a-fg: #e4efff;
+  --a-fg-bright: #ffffff;
+  --a-fg-heading: #ffffff;
+  --a-muted: #a8c4e8;
+  --a-icon-fg: #ffffff;
+  --a-icon-filter: brightness(1.2) contrast(1.1);
+  --a-glass: rgba(10, 20, 46, 0.55);
+  --a-glass-light: rgba(12, 22, 50, 0.46);
+  --a-glass-input: rgba(12, 22, 50, 0.58);
+  --a-glass-bubble-opaque: rgba(14, 26, 54, 0.68);
+  --a-bubble-edge: rgba(140, 195, 255, 0.45);
+  --a-glass-shell-shadow: 0 8px 28px rgba(0, 6, 20, 0.48), inset 0 1px 0 rgba(190, 220, 255, 0.14);
+  --a-glass-light-shadow: 0 4px 18px rgba(0, 6, 20, 0.35), inset 0 1px 0 rgba(180, 210, 255, 0.1);
+  --a-radius: 12px;
+  --a-panel-gap: 8px;
+  --a-blur: 34px;
+  --a-blur-chat: 34px;
+  --a-blur-input: 22px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 4px rgba(0, 4, 14, 0.9), 0 0 1px rgba(0, 10, 24, 0.7);
+  --a-text-shadow-sidebar: 0 1px 3px rgba(0, 4, 12, 0.8);
+  --a-sidebar-fg: #ffffff;
+  --a-sidebar-muted: #bdd4f5;
+  --a-sidebar-accent: #d0e4ff;
+  --a-link: #7ec8ff;
+  --a-btn-primary: #3d8fd9;
+  --a-btn-primary-fg: #ffffff;
+  --a-btn-primary-hover: #2f7ec8;
+  --a-btn-secondary: rgba(12, 22, 50, 0.72);
+  --a-btn-secondary-fg: #e4efff;
+  --a-btn-secondary-hover: rgba(40, 80, 140, 0.35);
+  --a-code-bg: rgba(8, 18, 38, 0.82);
+  --a-code-fg: #4ae878;
+  --a-header-bar: rgba(16, 25, 44, 0.75);
+  --a-hover-bg: rgba(40, 80, 140, 0.22);
+  --a-input-focus-border: rgba(130, 185, 255, 0.45);
+  --a-marble-c1: 0.006, 0.04, 0.09;
+  --a-marble-c2: 0.03, 0.12, 0.24;
+  --a-marble-c3: 0.10, 0.26, 0.46;
+  --a-marble-c4: 0.28, 0.50, 0.72;
+  --a-marble-c5: 0.52, 0.74, 0.95;
+  --a-marble-vignette: 0.45;
+  --a-marble-brightness: 0.9;
+  --a-bubble-shadow: 0 6px 24px rgba(0, 8, 24, 0.35), inset 0 1px 0 rgba(160, 200, 255, 0.07);
+  --a-code-block-bg: rgba(8, 16, 36, 0.58);
+  --a-selection-bg: rgba(0, 99, 165, 0.5);
+  --a-glow-1: rgba(20, 65, 130, 0.48);
+  --a-glow-2: rgba(14, 50, 105, 0.42);
+}
+
+html {
+  color-scheme: dark;
+}

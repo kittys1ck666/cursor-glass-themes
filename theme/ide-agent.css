@@ -1,0 +1,196 @@
+/* =============================================================================
+   IDE Agent — shell transparency only (marble visible)
+   Visual design = glass-base.css (same as Agents Window)
+   Do NOT add glass/bubbles/input here — that duplicates Agent and breaks parity
+   ============================================================================= */
+
+/* CSS vars — transparent shells */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor {
+  --composer-pane-background: transparent !important;
+  --glass-chat-surface-background: transparent !important;
+  --glass-editor-surface-background: transparent !important;
+  --cursor-bg-chrome: transparent !important;
+  --cursor-bg-primary: transparent !important;
+  --cursor-bg-secondary: transparent !important;
+  --cursor-bg-tertiary: transparent !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-sideBar-background: transparent !important;
+  --vscode-panel-background: transparent !important;
+}
+
+/* Opaque shells only — NOT * (glass-base styles ui-prompt-input, bubbles, etc.) */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar > .content,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .embedded-aux-bar-editor-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .editor-group-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .editor-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor .conversations,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-ai-pair-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .virtualized-composer-messages-content-shell,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .virtualized-composer-messages-scroll-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-messages-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-messages-scroll-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-messages-content-shell,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .monaco-editor,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .monaco-editor .margin,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .monaco-editor .monaco-editor-background,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .overflow-guard {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Sticky pin strip — wrapper transparent (glass only on inner bubble via glass-base) */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-sticky-human-message {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-sticky-human-message:before,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-sticky-human-message:after,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-fade-overlay,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input--conversation-overlay::before,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input--conversation-overlay::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}
+
+/* Marble canvas layer */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar > .content,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .abyss-panel-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar > .content > *:not(.abyss-panel-bg),
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor > *:not(.abyss-panel-bg) {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Selective nuclear — transparent everything EXCEPT glass-base styled widgets */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.abyss-panel-bg):not(.abyss-panel-bg *):not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.inline-agent-tabs__title *):not(.markdown-root pre):not(.markdown-root pre *):not(.composer-code-block):not(.composer-code-block *):not(.composer-pane-controls-feedback):not(.composer-pane-controls-feedback *) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.markdown-root pre):not(.composer-code-block) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Late kill — beats Cursor workbench.css after mount */
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar.basepanel.right.pane-composite-part.auxiliary-bar-show-agent-tabs,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor .conversations,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-ai-pair-container,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .monaco-editor,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .monaco-editor .monaco-editor-background {
+  background: transparent !important;
+  background-color: transparent !important;
+  --composer-pane-background: transparent !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-sideBar-background: transparent !important;
+}
+
+/* IDE input = Agents parity — last in bundle */
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input--conversation-overlay {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding: 8px var(--conversation-text-inset, 11px) 14px !important;
+  box-sizing: border-box !important;
+  --vscode-input-background: var(--a-glass-input) !important;
+  --vscode-input-foreground: var(--a-fg-bright) !important;
+  --cursor-text-primary: var(--a-fg-bright) !important;
+  --cursor-text-secondary: var(--a-muted) !important;
+}
+
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .ai-input-full-input-box,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input {
+  --vscode-input-background: var(--a-glass-input) !important;
+  --prompt-input-container-bg: var(--a-glass-input) !important;
+  --ai-input-full-input-box-margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-inline: 0 !important;
+  contain: none !important;
+  background: var(--a-glass-input) !important;
+  background-color: var(--a-glass-input) !important;
+  backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-fg-bright) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input__container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .glass-composer-usage-status-bar-mount,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .glass-chat-status-bar {
+  max-width: var(--composer-max-width, 840px) !important;
+  width: 100% !important;
+  margin: 4px auto 0 !important;
+  color: var(--a-muted) !important;
+}
+
+/* Chat column — IDE sidebar only */
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-messages-container,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .conversations,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .virtualized-composer-messages-content-shell,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .virtualized-composer-messages-row,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-ai-pair-container,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message:not(:has(.ui-prompt-input)) {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  align-self: auto !important;
+}
+
+/* Bottom input dock — IDE sidebar only */
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input,
+html body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input--conversation-overlay {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+  align-items: stretch !important;
+  padding: 8px var(--conversation-text-inset, 11px) 14px !important;
+}

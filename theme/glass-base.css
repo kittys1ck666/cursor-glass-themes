@@ -1,0 +1,1114 @@
+/* Glass base — colors come from theme/presets/*.css (load preset BEFORE this file) */
+
+:root {
+  --a-glass-panel: var(--a-glass-light);
+  --a-blur-panel: var(--a-blur-light);
+  --a-glass-sidebar: var(--a-glass-light);
+  --a-glass-chrome: var(--a-glass-panel);
+  --a-blur-sidebar: var(--a-blur-light);
+  --a-blur-chrome: var(--a-blur-panel);
+  --a-bubble-shadow: var(--a-glass-light-shadow);
+  --a-code-block-bg: var(--a-code-bg);
+  --a-hover-segment-bg: var(--a-hover-bg);
+  --a-selection-bg: rgba(100, 150, 255, 0.35);
+  --a-glow-1: rgba(128, 128, 128, 0.2);
+  --a-glow-2: rgba(128, 128, 128, 0.15);
+  --a-btn-primary: var(--a-link);
+  --a-btn-primary-fg: var(--a-fg-bright);
+  --a-btn-primary-hover: var(--a-link);
+  --a-btn-secondary: var(--a-glass);
+  --a-btn-secondary-fg: var(--a-fg-bright);
+  --a-btn-secondary-hover: var(--a-hover-bg);
+  --cursor-text-primary: var(--a-fg-bright) !important;
+  --cursor-text-secondary: var(--a-muted) !important;
+  --glass-chat-surface-background: transparent !important;
+  --glass-editor-surface-background: transparent !important;
+  --composer-pane-background: transparent !important;
+  --cursor-bg-editor: transparent !important;
+  --cursor-bg-chrome: transparent !important;
+}
+
+body[data-cursor-glass-mode="true"] [data-component="root"],
+body.cursor-dark[data-cursor-glass-mode="true"] [data-component="root"],
+body.cursor-dark.cursor-glass-os-vibrancy-on[data-cursor-glass-mode="true"] [data-component="root"] {
+  --glass-chat-surface-background: transparent !important;
+  --glass-editor-surface-background: var(--a-glass-light) !important;
+  --glass-vibrancy-on-editor-surface-background: var(--a-glass-light) !important;
+  --glass-vibrancy-off-editor-surface-background: var(--a-glass-light) !important;
+  --glass-sidebar-surface-background: var(--a-glass-panel) !important;
+  --glass-vibrancy-on-sidebar-surface-background: var(--a-glass-panel) !important;
+  --glass-vibrancy-off-sidebar-surface-background: var(--a-glass-panel) !important;
+  --glass-chat-bubble-background: var(--a-glass) !important;
+  --glass-chat-bubble-opaque-background: var(--a-glass-bubble-opaque) !important;
+  --prompt-input-container-bg: var(--a-glass-input) !important;
+  --cursor-bg-chrome: var(--a-glass-chrome) !important;
+  --cursor-bg-sidebar: var(--a-glass-panel) !important;
+  --cursor-bg-editor: transparent !important;
+  --cursor-bg-primary: transparent !important;
+  --cursor-bg-secondary: transparent !important;
+  --cursor-bg-tertiary: transparent !important;
+  --cursor-bg-elevated: var(--a-glass) !important;
+  --vscode-sideBar-background: var(--a-glass-panel) !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-editorGutter-background: transparent !important;
+  --cursor-text-primary: var(--a-sidebar-fg) !important;
+  --cursor-text-secondary: var(--a-sidebar-muted) !important;
+}
+
+/* Electron fix: canvas at z-index 0, workbench above but transparent */
+html {
+  background-color: transparent !important;
+}
+
+body {
+  background: transparent !important;
+}
+
+#abyss-global-bg {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  display: block !important;
+}
+
+/* On-screen debug HUD (no DevTools needed) — screenshot bottom-left corner */
+#abyss-debug-hud {
+  position: fixed !important;
+  left: 8px !important;
+  bottom: 28px !important;
+  z-index: 99999 !important;
+  max-width: 90vw !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  background: rgba(0, 0, 0, 0.72) !important;
+  color: #7dffb8 !important;
+  font: 11px/1.35 ui-monospace, Consolas, monospace !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#abyss-global-bg canvas,
+.abyss-panel-bg canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+.abyss-panel-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
+[data-component="workspaces-container"],
+[data-component="agent-panel"],
+.glass-agent-conversation-tiling,
+.composer-messages-container,
+.composer-bar.editor,
+.composer-human-message-container,
+.part.auxiliarybar .composer-pane {
+  position: relative !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Workbench above canvas, transparent so marble shows */
+.monaco-workbench {
+  position: relative !important;
+  z-index: 1 !important;
+  background-color: transparent !important;
+}
+
+/* Glass mode: transparent chat surfaces */
+body[data-cursor-glass-mode="true"] [data-component="root"],
+body[data-cursor-glass-mode="true"] [data-component="workspaces-container"],
+body[data-cursor-glass-mode="true"] [data-component="agent-panel"],
+body[data-cursor-glass-mode="true"] .glass-agent-conversation-tiling,
+body[data-cursor-glass-mode="true"] .glass-agent-conversation-tiling .ui-tiling-panel {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.part.auxiliarybar .composer-pane,
+.part.auxiliarybar .composer-messages-container,
+.composer-bar,
+.composer-bar.editor,
+[data-component="workspaces-container"],
+[data-component="workspaces-container"] > *,
+.glass-agent-conversation-tiling .ui-tiling-panel {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.part.auxiliarybar {
+  background: var(--a-auxiliary-bg, transparent) !important;
+  border-left: 1px solid var(--a-auxiliary-border, var(--a-bubble-edge)) !important;
+}
+
+body[data-cursor-glass-mode="true"] .part.auxiliarybar {
+  background: transparent !important;
+  border-left-color: var(--a-bubble-edge) !important;
+}
+
+/* ===== IDE auxiliary bar — marble host + kill Cursor opaque fills ===== */
+/* Cursor built-in: .part.auxiliarybar{background-color:var(--vscode-editor-background)!important} */
+.part.auxiliarybar,
+.part.auxiliarybar.basepanel.right.pane-composite-part.auxiliary-bar-show-agent-tabs,
+.monaco-workbench .part.auxiliarybar.basepanel.right.pane-composite-part.auxiliary-bar-show-agent-tabs,
+.monaco-workbench .part.auxiliarybar,
+.part.auxiliarybar.basepanel.right.pane-composite-part,
+.part.auxiliarybar.auxiliary-bar-show-agent-tabs {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  --composer-pane-background: transparent !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-sideBar-background: transparent !important;
+  --vscode-panel-background: transparent !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .content,
+.monaco-workbench .part.auxiliarybar > .content > *,
+.part.auxiliarybar .pane-body,
+.part.auxiliarybar .split-view-view,
+.part.auxiliarybar .monaco-scrollable-element,
+.part.auxiliarybar .split-view-container {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Cursor paints the whole composer column on monaco-editor-background */
+.monaco-workbench .part.auxiliarybar > .content .monaco-editor,
+.monaco-workbench .part.auxiliarybar > .content .monaco-editor .margin,
+.monaco-workbench .part.auxiliarybar > .content .monaco-editor .monaco-editor-background,
+.part.auxiliarybar .composer-bar .monaco-editor,
+.part.auxiliarybar .composer-bar .monaco-editor .margin,
+.part.auxiliarybar .composer-bar .monaco-editor .monaco-editor-background {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.part.auxiliarybar > .abyss-panel-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .title {
+  position: relative !important;
+  z-index: 2 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .content {
+  position: relative !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  min-height: 100% !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .content > .abyss-panel-bg,
+.part.auxiliarybar > .content > .abyss-panel-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .content > *:not(.abyss-panel-bg) {
+  position: relative !important;
+  z-index: 1 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .content > .abyss-panel-bg {
+  z-index: 0 !important;
+}
+
+.part.auxiliarybar .embedded-aux-bar-editor-container,
+.part.auxiliarybar .editor-group-container,
+.part.auxiliarybar .editor-group-container > .title,
+.part.auxiliarybar .composite,
+.part.auxiliarybar .composite.title,
+.part.auxiliarybar .pane-body,
+.part.auxiliarybar .composer-human-ai-pair-container,
+.part.auxiliarybar .virtualized-composer-messages-content-shell,
+.part.auxiliarybar .composer-bar.editor,
+.part.auxiliarybar .composer-bar.editor .conversations,
+.part.auxiliarybar .composer-bar.editor .composer-messages-container,
+.part.auxiliarybar .composer-bar.editor .composer-human-message-container,
+.part.auxiliarybar .composer-bar.editor .composer-sticky-human-message:before,
+.part.auxiliarybar .composer-bar.editor .composer-sticky-human-message:after,
+.part.auxiliarybar .glass-agent-conversation-tiling,
+.part.auxiliarybar .glass-agent-conversation-tiling .ui-tiling-panel,
+.part.auxiliarybar .glass-agent-conversation-tiling__header,
+.part.auxiliarybar .agent-panel,
+.part.auxiliarybar .agent-panel-followup-input,
+.part.auxiliarybar [data-component="agent-panel"],
+.part.auxiliarybar .lines-content,
+.part.auxiliarybar .view-overlays,
+.part.auxiliarybar .view-lines,
+.part.auxiliarybar .inputarea,
+.part.auxiliarybar .overflow-guard {
+  background: transparent !important;
+  background-color: transparent !important;
+  --composer-pane-background: transparent !important;
+  --glass-chat-surface-background: transparent !important;
+  --glass-editor-surface-background: transparent !important;
+  --cursor-bg-primary: transparent !important;
+  --cursor-bg-secondary: transparent !important;
+}
+
+/* Quiet Light / vscode-light — Cursor re-applies sidebar bg after mount */
+.vscode-light .monaco-workbench .part.auxiliarybar,
+.vscode-light .monaco-workbench .part.auxiliarybar > .content,
+.vscode-light .monaco-workbench .part.auxiliarybar .monaco-editor,
+.vscode-light .monaco-workbench .part.auxiliarybar .monaco-editor-background,
+.vscode-light .monaco-workbench .part.auxiliarybar .embedded-aux-bar-editor-container {
+  background: transparent !important;
+  background-color: transparent !important;
+  --vscode-sideBar-background: transparent !important;
+  --vscode-editor-background: transparent !important;
+  --composer-pane-background: transparent !important;
+}
+
+.part.auxiliarybar .composite.title,
+.part.auxiliarybar .composer-pane,
+.part.auxiliarybar .composer-bar,
+.part.auxiliarybar .composer-messages-container,
+.part.auxiliarybar .composer-messages-scroll-container,
+.part.auxiliarybar .composer-messages-content-shell,
+.part.auxiliarybar .agent-panel-followup-input,
+.part.auxiliarybar .composer-pane-controls-feedback {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* CSS wash disabled — was painting solid pink (#fff5f9) over marble in IDE */
+body::before {
+  display: none !important;
+  content: none !important;
+}
+
+@keyframes abyss-drift {
+  0%   { transform: translate(0%, 0%) scale(1); }
+  33%  { transform: translate(-2.5%, 1.5%) scale(1.04); }
+  66%  { transform: translate(1.5%, -2%) scale(1.03); }
+  100% { transform: translate(0%, 0%) scale(1); }
+}
+
+/* Chat content above panel canvas */
+.composer-messages-scroll-container,
+.virtualized-composer-messages-scroll-container,
+.react-composer-transcript-scroll,
+.native-scroll-container,
+.composer-messages-content-shell,
+.glass-agent-conversation-tiling__header {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.agent-panel-followup-input:not(.agent-panel-followup-input--conversation-overlay) {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Transparent wrappers — marble shows through when input grows */
+.composer-human-message-container {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Agents: transparent shell only — layout = Cursor native (same as abyss/blue presets) */
+.agent-panel-followup-input,
+.agent-panel .agent-panel-followup-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  --cursor-bg-chrome: transparent !important;
+}
+
+/* IDE sidebar only — full-width column layout */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel .agent-panel-followup-input {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding: 8px var(--conversation-text-inset, 11px) 14px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Restore Cursor overlay positioning (was broken by position:relative override) */
+.agent-panel-followup-input--conversation-overlay,
+.agent-panel .agent-panel-followup-input--conversation-overlay {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 30 !important;
+  isolation: isolate !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Cursor draws opaque chrome mask here — causes gray line above status bar */
+.agent-panel-followup-input--conversation-overlay::before,
+.agent-panel-followup-input--conversation-overlay::after,
+.agent-panel .agent-panel-followup-input--conversation-overlay::before,
+.agent-panel .agent-panel-followup-input--conversation-overlay::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+.agent-panel-followup-input--conversation-overlay {
+  --cursor-bg-chrome: transparent !important;
+  --agent-panel-followup-bottom-bleed-mask-height: 0px !important;
+  --agent-panel-followup-overlay-height: 0px !important;
+  background: transparent !important;
+}
+
+/* Center input box like chat column */
+.agent-panel-followup-input .ui-prompt-input,
+.agent-panel-followup-input .composer-human-message.standalone-glass,
+.agent-panel .agent-panel-followup-input .ui-prompt-input,
+.agent-panel .agent-panel-followup-input .composer-human-message.standalone-glass {
+  width: 100% !important;
+  max-width: var(--composer-max-width, 840px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+}
+
+.agent-panel-followup-input .ui-prompt-input {
+  --glass-chat-bubble-background: var(--a-glass) !important;
+  --prompt-input-container-bg: var(--a-glass-input) !important;
+  --prompt-input-container-border: transparent !important;
+  --prompt-input-container-border-hover: transparent !important;
+  --cursor-stroke-tertiary: transparent !important;
+  --cursor-stroke-secondary: transparent !important;
+}
+
+.agent-panel-followup-input .glass-chat-status-bar,
+.agent-panel-followup-input .glass-chat-status-bar__left,
+.agent-panel-followup-input .glass-chat-status-bar__right,
+.agent-panel-followup-input .agent-panel-followup-status-area,
+.agent-panel-followup-input .glass-composer-usage-status-bar-mount,
+.agent-panel-followup-input .glass-chat-status-bar__segment,
+.agent-panel-followup-input .glass-chat-status-bar__metric {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.agent-panel-followup-input .glass-chat-status-bar__segment:hover,
+.agent-panel-followup-input .glass-chat-status-bar__metric--context:hover {
+  background: var(--a-hover-segment-bg) !important;
+}
+
+/* Chat column — IDE sidebar only (Agents uses Cursor native column) */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor .composer-messages-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-bar.editor .conversations,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .virtualized-composer-messages-content-shell {
+  width: 100% !important;
+  max-width: var(--composer-max-width, 840px) !important;
+  margin-inline: auto !important;
+  box-sizing: border-box !important;
+  padding-inline: var(--conversation-text-inset, 11px) !important;
+}
+
+/* Row wrappers — IDE sidebar only */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .virtualized-composer-messages-row,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-ai-pair-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .human-message-with-todos-wrapper,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container.human-execution-message-top,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container.human-execution-message-bottom {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box !important;
+  padding-inline: 0 !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-sticky-human-message {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box !important;
+  padding-inline: 0 !important;
+}
+
+/* Glass bubbles — colors everywhere; full-width layout IDE only */
+.composer-human-message:not(:has(.ui-prompt-input)),
+body[data-cursor-glass-mode="true"] .composer-human-message:not(:has(.ui-prompt-input)),
+body[data-cursor-glass-mode="true"] .composer-human-message.standalone-glass:not(:has(.ui-prompt-input)),
+body[data-cursor-glass-mode="true"] .composer-human-message-container .composer-human-message:not(:has(.ui-prompt-input)) {
+  background: var(--a-glass) !important;
+  background-color: var(--a-glass) !important;
+  backdrop-filter: blur(var(--a-blur-chat)) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-chat)) saturate(1.6) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-bubble-shadow) !important;
+  color: var(--a-fg-bright) !important;
+  max-height: min(50vh, 520px) !important;
+  overflow-y: auto !important;
+  word-break: break-word !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message:not(:has(.ui-prompt-input)),
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-sticky-human-message > .composer-human-message {
+  display: block !important;
+  align-self: auto !important;
+  margin-inline: 0 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message.standalone-glass:has(.ui-prompt-input) .ui-prompt-input__container {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.ui-prompt-input__header,
+.ui-prompt-input-editor,
+.ui-prompt-input-toolbar,
+.ui-prompt-input-toolbar__left,
+.ui-prompt-input-toolbar__right {
+  background: transparent !important;
+}
+
+.composer-code-block,
+.markdown-root pre,
+.composer-tool-call-container,
+.composer-tool-call-simple-layout,
+.composer-code-block-content {
+  background: var(--a-code-block-bg) !important;
+  background-color: var(--a-code-block-bg) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.3) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: 8px !important;
+}
+
+.composer-human-message-content {
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+  color: var(--a-fg) !important;
+  font-size: 13px !important;
+}
+
+.ui-prompt-input-editor,
+.ui-prompt-input-editor .ProseMirror {
+  max-height: min(280px, 40vh) !important;
+  overflow-y: auto !important;
+  background: transparent !important;
+}
+
+.ui-prompt-input-editor__input {
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  display: block !important;
+  background: transparent !important;
+}
+
+.markdown-root, .markdown-root p, .markdown-root li, .markdown-root span {
+  color: var(--a-fg) !important;
+  text-shadow: var(--a-text-shadow) !important;
+}
+
+.markdown-root h1, .markdown-root h2, .markdown-root h3, .markdown-root strong {
+  color: var(--a-fg-heading) !important;
+  text-shadow: var(--a-text-shadow) !important;
+}
+
+.markdown-root a { color: var(--a-link) !important; }
+.markdown-root code { background: var(--a-code-bg) !important; color: var(--a-code-fg) !important; }
+
+.ui-prompt-input [contenteditable], .ui-prompt-input-editor__input {
+  color: var(--a-fg-bright) !important;
+}
+
+.ui-prompt-input-toolbar, .ui-prompt-input-toolbar * { color: var(--a-muted) !important; }
+
+.monaco-workbench .part.auxiliarybar > .title,
+.monaco-workbench .part.auxiliarybar .composite.title,
+.monaco-workbench .part.auxiliarybar .inline-agent-tabs__title,
+.glass-agent-conversation-tiling__header {
+  background: var(--a-header-bar) !important;
+  background-color: var(--a-header-bar) !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.4) !important;
+  border-bottom: 1px solid var(--a-bubble-edge) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+.part.auxiliarybar ::selection { background: var(--a-selection-bg) !important; }
+
+/* ===== Followup input — glass bubble ===== */
+body[data-cursor-glass-mode="true"] [data-component="agent-panel"],
+body[data-cursor-glass-mode="true"] [data-component="workspaces-container"],
+.agent-panel-followup-input,
+.part.auxiliarybar .composer-bar.editor,
+.part.auxiliarybar .agent-panel-followup-input {
+  --vscode-input-background: var(--a-glass-input) !important;
+  --prompt-input-container-border: transparent !important;
+  --prompt-input-container-border-hover: transparent !important;
+  --cursor-stroke-tertiary: transparent !important;
+  --cursor-stroke-secondary: transparent !important;
+}
+
+/* Cursor 2025+ composer input (DevTools: div.ai-input-full-input-box.full-input-box) */
+.ai-input-full-input-box,
+.full-input-box.ai-input-full-input-box,
+.agent-panel-followup-input .ai-input-full-input-box,
+.part.auxiliarybar .ai-input-full-input-box,
+body[data-cursor-glass-mode="true"] .ai-input-full-input-box {
+  --vscode-input-background: var(--a-glass-input) !important;
+  --vscode-input-foreground: var(--a-fg-bright) !important;
+  --vscode-input-placeholderForeground: var(--a-muted) !important;
+  --cursor-text-primary: var(--a-fg-bright) !important;
+  --cursor-text-secondary: var(--a-muted) !important;
+  --cursor-text-tertiary: var(--a-muted) !important;
+  --ai-input-full-input-box-margin: 0 !important;
+  contain: none !important;
+  isolation: isolate !important;
+  background: var(--a-glass-input) !important;
+  background-color: var(--a-glass-input) !important;
+  backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+.ai-input-full-input-box:focus-within,
+.full-input-box.ai-input-full-input-box:focus-within {
+  border-color: var(--a-input-focus-border) !important;
+}
+
+.ai-input-full-input-box .aislash-editor-input,
+.ai-input-full-input-box .aislash-editor-input-readonly,
+.ai-input-full-input-box .ai-input-full-input-box-bottom-container {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.ai-input-full-input-box .aislash-editor-input,
+.ai-input-full-input-box .aislash-editor-input [contenteditable],
+.ai-input-full-input-box .aislash-editor-input p,
+.ai-input-full-input-box .aislash-editor-input-readonly {
+  color: var(--a-fg-bright) !important;
+}
+
+.ai-input-full-input-box .composer-unified-dropdown,
+.ai-input-full-input-box .composer-unified-fake-dropdown {
+  background-color: transparent !important;
+  color: var(--a-fg-bright) !important;
+  opacity: 1 !important;
+}
+
+.ai-input-full-input-box .input-box-submit-button-container {
+  background-color: var(--a-btn-primary) !important;
+  border-radius: 999px !important;
+  opacity: 1 !important;
+}
+
+.ai-input-full-input-box .input-box-submit-button-part,
+.ai-input-full-input-box .input-box-submit-button-part .codicon {
+  color: var(--a-btn-primary-fg) !important;
+  opacity: 1 !important;
+}
+
+/* Center input card in chat column — Agents + IDE */
+.agent-panel-followup-input .ai-input-full-input-box,
+.agent-panel-followup-input .ui-prompt-input,
+.part.auxiliarybar .agent-panel-followup-input .ai-input-full-input-box,
+.part.auxiliarybar .agent-panel-followup-input .ui-prompt-input {
+  width: 100% !important;
+  max-width: var(--composer-max-width, 840px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input--conversation-overlay {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+.part.auxiliarybar .glass-composer-usage-status-bar-mount,
+.part.auxiliarybar .glass-chat-status-bar,
+body[data-cursor-glass-mode="true"] .glass-composer-usage-status-bar-mount {
+  max-width: var(--composer-max-width, 840px) !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  color: var(--a-muted) !important;
+}
+
+/* IDE sidebar — fixed shell, glass input card (Agents: vars + center rule above only) */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel .agent-panel-followup-input .ui-prompt-input {
+  --prompt-input-container-bg: var(--a-glass-input) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  background: var(--a-glass-input) !important;
+  background-color: var(--a-glass-input) !important;
+  backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-fg-bright) !important;
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+}
+
+/* Inline edit in transcript — IDE sidebar only */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container:has(.ui-prompt-input),
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message.standalone-glass:has(.ui-prompt-input) {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  padding-inline: 0 !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message.standalone-glass:has(.ui-prompt-input),
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container:has(.ui-prompt-input) .composer-human-message {
+  --prompt-input-container-bg: var(--a-glass-input) !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  background: var(--a-glass-input) !important;
+  background-color: var(--a-glass-input) !important;
+  backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-input)) saturate(1.65) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-fg-bright) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message-container:has(.ui-prompt-input) .ui-prompt-input,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message.standalone-glass:has(.ui-prompt-input) .ui-prompt-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input__container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  max-height: min(50vh, 520px) !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input-editor,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input-editor .ProseMirror,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .agent-panel-followup-input .ui-prompt-input [contenteditable="true"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+.input-box-selections,
+.input-box-selection-header {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+.agent-panel-followup-input .ui-prompt-input:focus-within,
+.agent-panel-followup-input .composer-human-message.standalone-glass:has(.ui-prompt-input):focus-within {
+  border-color: var(--a-input-focus-border) !important;
+}
+
+.agent-panel-followup-input .ui-prompt-input-editor .ProseMirror,
+.agent-panel-followup-input .ui-prompt-input [contenteditable] {
+  color: var(--a-fg-bright) !important;
+  font-size: 13px !important;
+}
+
+.agent-panel-followup-input .ui-prompt-input-editor__input:empty::before,
+.agent-panel-followup-input .ui-prompt-input [contenteditable]:empty {
+  color: var(--a-muted) !important;
+}
+
+.agent-panel-followup-input .glass-chat-status-bar,
+.agent-panel-followup-input .glass-composer-usage-status-bar-mount,
+.agent-panel-followup-input .agent-panel-followup-status-area {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--a-muted) !important;
+}
+
+.agent-panel-followup-input .glass-chat-status-bar__segment,
+.agent-panel-followup-input .glass-chat-status-bar__metric,
+.agent-panel-followup-input .glass-chat-status-bar__segment-label,
+.agent-panel-followup-input .glass-chat-status-bar__metric-label {
+  color: var(--a-muted) !important;
+}
+
+/* ===== Glass panels — sidebar, file tree, editor (marble between) ===== */
+body[data-cursor-glass-mode="true"] [data-component="root"] {
+  background: transparent !important;
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+body[data-cursor-glass-mode="true"] [data-component="workspaces-container"] {
+  background: transparent !important;
+  gap: var(--a-panel-gap) !important;
+  padding: var(--a-panel-gap) var(--a-panel-gap) var(--a-panel-gap) 0 !important;
+  overflow: visible !important;
+}
+
+/* Top menubar — same glass as side panels */
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar {
+  position: relative !important;
+  isolation: isolate !important;
+  background: var(--a-glass-panel) !important;
+  background-color: var(--a-glass-panel) !important;
+  backdrop-filter: blur(var(--a-blur-panel)) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-panel)) saturate(1.25) !important;
+  border-bottom: 1px solid var(--a-bubble-edge) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  color: var(--a-fg-bright) !important;
+  z-index: 50 !important;
+  --cursor-icon-primary: var(--a-icon-fg) !important;
+  --cursor-icon-secondary: var(--a-icon-fg) !important;
+  --cursor-bg-quaternary: transparent !important;
+  --cursor-bg-tertiary: transparent !important;
+  --vscode-sideBar-background: transparent !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__drag-tail,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__menus,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__window-controls,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls,
+body[data-cursor-glass-mode="true"] .glass-window-controls {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Window controls — fully transparent, icons only */
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls,
+body[data-cursor-glass-mode="true"] .glass-window-controls {
+  --cursor-bg-quaternary: transparent !important;
+  --cursor-bg-tertiary: transparent !important;
+  --cursor-bg-red-primary: transparent !important;
+  --cursor-bg-red-secondary: transparent !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__text-trigger,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__menus,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__window-controls,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls {
+  color: var(--a-icon-fg) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button,
+body[data-cursor-glass-mode="true"] .glass-window-controls__button,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button::before,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  --cursor-bg-quaternary: transparent !important;
+  --cursor-bg-tertiary: transparent !important;
+  --cursor-bg-red-primary: transparent !important;
+  --cursor-bg-red-secondary: transparent !important;
+  color: var(--a-icon-fg) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__icon,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__icon.ui-codicon,
+body[data-cursor-glass-mode="true"] .glass-window-controls__icon,
+body[data-cursor-glass-mode="true"] .glass-window-controls__icon.ui-codicon {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--a-icon-fg) !important;
+  fill: var(--a-icon-fg) !important;
+  stroke: var(--a-icon-fg) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__icon svg,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__icon svg *,
+body[data-cursor-glass-mode="true"] .glass-window-controls__icon svg,
+body[data-cursor-glass-mode="true"] .glass-window-controls__icon svg * {
+  color: var(--a-icon-fg) !important;
+  fill: var(--a-icon-fg) !important;
+  stroke: var(--a-icon-fg) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button:hover:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button:active:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button:focus-visible,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button[data-kind="close"]:hover:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .glass-window-controls__button[data-kind="close"]:active:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-window-controls__button:hover:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-window-controls__button:active:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-window-controls__button[data-kind="close"]:hover:not(:disabled),
+body[data-cursor-glass-mode="true"] .glass-window-controls__button[data-kind="close"]:active:not(:disabled) {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--a-icon-fg) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__text-trigger {
+  color: var(--a-fg-bright) !important;
+  text-shadow: var(--a-text-shadow) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__logo-btn,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__logo-btn .codicon,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar .codicon:not(.glass-window-controls__icon),
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar svg:not(.glass-window-controls__icon svg),
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar img {
+  color: var(--a-icon-fg) !important;
+  opacity: 1 !important;
+  filter: var(--a-icon-filter, brightness(1.2) contrast(1.1)) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__logo-btn svg,
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__logo-btn svg * {
+  fill: var(--a-icon-fg) !important;
+  stroke: var(--a-icon-fg) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__menus {
+  background: transparent !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__text-trigger {
+  background: transparent !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-in-app-menubar__text-trigger:hover {
+  background: var(--a-hover-bg) !important;
+  color: var(--a-fg-bright) !important;
+}
+
+/* Unified panel glass — sidebar, file-tree, editor */
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked,
+body[data-cursor-glass-mode="true"] .glass-sidebar-overlay,
+body[data-cursor-glass-mode="true"] .editor-panel-container,
+body[data-cursor-glass-mode="true"] .ui-tiling-panel:not(:has([data-component="agent-panel"])):not(:has(.editor-panel-container)) {
+  position: relative !important;
+  isolation: isolate !important;
+  background: var(--a-glass-panel) !important;
+  background-color: var(--a-glass-panel) !important;
+  backdrop-filter: blur(var(--a-blur-panel)) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-panel)) saturate(1.25) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  overflow: hidden !important;
+  color: var(--a-fg-bright) !important;
+}
+
+/* Left sidebar — flush to top + left window edges */
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked,
+body[data-cursor-glass-mode="true"] .glass-sidebar-overlay,
+body[data-cursor-glass-mode="true"] [data-component="switcher"],
+body[data-cursor-glass-mode="true"] [data-component="workspace-sidebar"] {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  height: 100% !important;
+}
+
+body[data-cursor-glass-mode="true"] .agent-sidebar {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body[data-cursor-glass-mode="true"] .agent-sidebar-header {
+  padding: 6px 10px 6px 6px !important;
+}
+
+body[data-cursor-glass-mode="true"] .agent-sidebar-header-leading-controls {
+  transform: none !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked .ui-sidebar,
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked .ui-sidebar-menu,
+body[data-cursor-glass-mode="true"] .glass-sidebar-project-group > .ui-sidebar-menu {
+  padding-left: 4px !important;
+}
+
+body[data-cursor-glass-mode="true"] .agent-sidebar-header,
+body[data-cursor-glass-mode="true"] .agent-sidebar-footer,
+body[data-cursor-glass-mode="true"] .agent-sidebar .ui-scroll-area,
+body[data-cursor-glass-mode="true"] .agent-sidebar .ui-scroll-area__content,
+body[data-cursor-glass-mode="true"] .agent-sidebar .ui-scroll-area__viewport {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Chat column — no heavy outer glass (bubbles handle it) */
+body[data-cursor-glass-mode="true"] .ui-tiling-panel:has([data-component="agent-panel"]),
+body[data-cursor-glass-mode="true"] .glass-agent-conversation-tiling {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Inner file-tree layers stay transparent (glass on outer panel only) */
+body[data-cursor-glass-mode="true"] .file-tab-tree-panel,
+body[data-cursor-glass-mode="true"] .file-tab-tree-scroll,
+body[data-cursor-glass-mode="true"] .file-tab-tree-menu {
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body[data-cursor-glass-mode="true"] .file-tab-tree-panel__tree-surface,
+body[data-cursor-glass-mode="true"] .file-tab-tree-scroll__tree-wrapper,
+body[data-cursor-glass-mode="true"] .file-tab-tree-panel .ui-scroll-area__content {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Editor tabs — transparent inside light glass panel */
+body[data-cursor-glass-mode="true"] .glass-bookmarks-bar,
+body[data-cursor-glass-mode="true"] .glass-bookmarks-inner {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: var(--a-bubble-edge) !important;
+}
+
+body[data-cursor-glass-mode="true"] .monaco-editor,
+body[data-cursor-glass-mode="true"] .monaco-editor-background,
+body[data-cursor-glass-mode="true"] .monaco-editor .margin,
+body[data-cursor-glass-mode="true"] .monaco-scrollable-element > .monaco-editor-background {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+body[data-cursor-glass-mode="true"] .editor-group-container,
+body[data-cursor-glass-mode="true"] .editor-instance,
+body[data-cursor-glass-mode="true"] .part.editor > .content {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Sidebar text — high contrast */
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked,
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked *,
+body[data-cursor-glass-mode="true"] .agent-sidebar,
+body[data-cursor-glass-mode="true"] .agent-sidebar * {
+  --cursor-text-primary: var(--a-sidebar-fg) !important;
+  --cursor-text-secondary: var(--a-sidebar-accent) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked .ui-menu__item-label,
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked .ui-sidebar-menu__item,
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked button,
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked a,
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked span,
+body[data-cursor-glass-mode="true"] .agent-sidebar,
+body[data-cursor-glass-mode="true"] .agent-sidebar .ui-menu__item,
+body[data-cursor-glass-mode="true"] .agent-sidebar .ui-menu__item-label,
+body[data-cursor-glass-mode="true"] .agent-sidebar button,
+body[data-cursor-glass-mode="true"] .agent-sidebar a,
+body[data-cursor-glass-mode="true"] .agent-sidebar span,
+body[data-cursor-glass-mode="true"] .file-tab-tree-panel,
+body[data-cursor-glass-mode="true"] .ui-file-tree__row,
+body[data-cursor-glass-mode="true"] .file-tab-tree-panel__workspace-header-label {
+  color: var(--a-fg-bright) !important;
+  text-shadow: var(--a-text-shadow-sidebar) !important;
+  font-weight: 500 !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked .ui-menu__item[data-variant="subtle"],
+body[data-cursor-glass-mode="true"] .agent-sidebar .ui-menu__item[data-variant="subtle"],
+body[data-cursor-glass-mode="true"] .agent-sidebar .agent-sidebar-footer,
+body[data-cursor-glass-mode="true"] .agent-sidebar [class*="muted"] {
+  color: var(--a-sidebar-muted) !important;
+}
+
+body[data-cursor-glass-mode="true"] .glass-sidebar-docked .codicon,
+body[data-cursor-glass-mode="true"] .agent-sidebar .codicon {
+  color: var(--a-sidebar-fg) !important;
+  opacity: 0.95 !important;
+}
+
+/* Editor tabs text */
+body[data-cursor-glass-mode="true"] .ui-file-tree,
+body[data-cursor-glass-mode="true"] .glass-bookmark-item {
+  color: var(--a-fg-bright) !important;
+  text-shadow: var(--a-text-shadow-sidebar) !important;
+}

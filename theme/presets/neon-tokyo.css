@@ -1,0 +1,58 @@
+/* Neon Tokyo — synthwave magenta & cyan */
+:root {
+  --a-theme-id: neon-tokyo;
+  --a-theme-mode: dark;
+  --a-bg: #08040f;
+  --a-fg: #f0e0ff;
+  --a-fg-bright: #ffffff;
+  --a-fg-heading: #ffffff;
+  --a-muted: #c090e0;
+  --a-icon-fg: #f8e8ff;
+  --a-icon-filter: brightness(1.2) saturate(1.1);
+  --a-glass: rgba(18, 8, 32, 0.56);
+  --a-glass-light: rgba(22, 10, 38, 0.48);
+  --a-glass-input: rgba(26, 12, 44, 0.62);
+  --a-glass-bubble-opaque: rgba(28, 14, 48, 0.74);
+  --a-bubble-edge: rgba(200, 80, 255, 0.35);
+  --a-glass-shell-shadow: 0 8px 28px rgba(40, 0, 60, 0.45), inset 0 1px 0 rgba(200, 120, 255, 0.12);
+  --a-glass-light-shadow: 0 4px 18px rgba(30, 0, 50, 0.35), inset 0 1px 0 rgba(180, 100, 255, 0.1);
+  --a-radius: 12px;
+  --a-panel-gap: 8px;
+  --a-blur: 34px;
+  --a-blur-chat: 34px;
+  --a-blur-input: 22px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 4px rgba(8, 0, 16, 0.92);
+  --a-text-shadow-sidebar: 0 1px 3px rgba(8, 0, 14, 0.82);
+  --a-sidebar-fg: #ffffff;
+  --a-sidebar-muted: #b888e0;
+  --a-sidebar-accent: #d0a8ff;
+  --a-link: #40e8ff;
+  --a-btn-primary: #b040e8;
+  --a-btn-primary-fg: #ffffff;
+  --a-btn-primary-hover: #9a30d8;
+  --a-btn-secondary: rgba(26, 12, 44, 0.74);
+  --a-btn-secondary-fg: #f8e8ff;
+  --a-btn-secondary-hover: rgba(160, 40, 220, 0.32);
+  --a-code-bg: rgba(12, 4, 24, 0.9);
+  --a-code-fg: #ff60d0;
+  --a-header-bar: rgba(20, 8, 36, 0.78);
+  --a-hover-bg: rgba(160, 40, 220, 0.22);
+  --a-input-focus-border: rgba(200, 80, 255, 0.42);
+  --a-marble-c1: 0.02, 0.01, 0.05;
+  --a-marble-c2: 0.08, 0.02, 0.14;
+  --a-marble-c3: 0.18, 0.04, 0.28;
+  --a-marble-c4: 0.35, 0.12, 0.48;
+  --a-marble-c5: 0.55, 0.28, 0.72;
+  --a-marble-vignette: 0.44;
+  --a-marble-brightness: 0.92;
+  --a-bubble-shadow: 0 6px 24px rgba(30, 0, 50, 0.35), inset 0 1px 0 rgba(180, 100, 255, 0.1);
+  --a-code-block-bg: rgba(12, 4, 24, 0.58);
+  --a-selection-bg: rgba(200, 80, 255, 0.35);
+  --a-glow-1: rgba(180, 40, 220, 0.35);
+  --a-glow-2: rgba(40, 180, 255, 0.28);
+}
+
+html {
+  color-scheme: dark;
+}

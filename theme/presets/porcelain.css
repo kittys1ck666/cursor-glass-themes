@@ -1,0 +1,58 @@
+/* Porcelain — white & black minimal light */
+:root {
+  --a-theme-id: porcelain;
+  --a-theme-mode: light;
+  --a-bg: #f6f6f4;
+  --a-fg: #2a2a2a;
+  --a-fg-bright: #0d0d0d;
+  --a-fg-heading: #000000;
+  --a-muted: #5c5c5c;
+  --a-icon-fg: #111111;
+  --a-icon-filter: none;
+  --a-glass: rgba(255, 255, 255, 0.84);
+  --a-glass-light: rgba(255, 255, 255, 0.8);
+  --a-glass-input: rgba(255, 255, 255, 0.93);
+  --a-glass-bubble-opaque: rgba(255, 255, 255, 0.92);
+  --a-bubble-edge: rgba(0, 0, 0, 0.12);
+  --a-glass-shell-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --a-glass-light-shadow: 0 4px 14px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --a-radius: 10px;
+  --a-panel-gap: 8px;
+  --a-blur: 26px;
+  --a-blur-chat: 26px;
+  --a-blur-input: 26px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+  --a-text-shadow-sidebar: none;
+  --a-sidebar-fg: #0d0d0d;
+  --a-sidebar-muted: #4a4a4a;
+  --a-sidebar-accent: #333333;
+  --a-link: #1a1a1a;
+  --a-code-bg: rgba(240, 240, 238, 0.95);
+  --a-code-fg: #1a5c1a;
+  --a-header-bar: rgba(255, 255, 255, 0.7);
+  --a-hover-bg: rgba(0, 0, 0, 0.06);
+  --a-input-focus-border: rgba(0, 0, 0, 0.25);
+  --a-marble-c1: 0.96, 0.96, 0.95;
+  --a-marble-c2: 0.90, 0.90, 0.89;
+  --a-marble-c3: 0.82, 0.82, 0.81;
+  --a-marble-c4: 0.72, 0.72, 0.71;
+  --a-marble-c5: 0.88, 0.88, 0.87;
+  --a-marble-vignette: 0.12;
+  --a-marble-brightness: 1.02;
+  --a-bubble-shadow: 0 6px 18px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --a-code-block-bg: rgba(245, 245, 243, 0.55);
+  --a-btn-primary: #2a2a2a;
+  --a-btn-primary-fg: #ffffff;
+  --a-btn-primary-hover: #444444;
+  --a-btn-secondary: rgba(255, 255, 255, 0.78);
+  --a-btn-secondary-fg: #1a1a1a;
+  --a-btn-secondary-hover: rgba(230, 230, 228, 0.85);
+  --a-selection-bg: rgba(0, 0, 0, 0.12);
+  --a-glow-1: rgba(200, 200, 198, 0.35);
+  --a-glow-2: rgba(180, 180, 178, 0.25);
+}
+
+html {
+  color-scheme: light;
+}

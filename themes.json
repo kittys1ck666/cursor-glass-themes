@@ -1,0 +1,68 @@
+{
+  "themes": [
+    {
+      "id": "abyss",
+      "name": "Abyss Blue",
+      "description": "Deep navy glass + cool blue marble (original)",
+      "mode": "dark",
+      "cursorTheme": "Abyss",
+      "preset": "theme/presets/abyss.css"
+    },
+    {
+      "id": "sakura",
+      "name": "Sakura Pink",
+      "description": "Soft pink-white glass, cherry blossom marble",
+      "mode": "light",
+      "cursorTheme": "Quiet Light",
+      "preset": "theme/presets/sakura.css"
+    },
+    {
+      "id": "noir",
+      "name": "Noir Mono",
+      "description": "Black & white high-contrast dark glass",
+      "mode": "dark",
+      "cursorTheme": "Abyss",
+      "preset": "theme/presets/noir.css"
+    },
+    {
+      "id": "porcelain",
+      "name": "Porcelain",
+      "description": "White & black minimal light glass",
+      "mode": "light",
+      "cursorTheme": "Default Light Modern",
+      "preset": "theme/presets/porcelain.css"
+    },
+    {
+      "id": "aurora",
+      "name": "Aurora",
+      "description": "Northern lights — teal, violet, emerald marble",
+      "mode": "dark",
+      "cursorTheme": "Abyss",
+      "preset": "theme/presets/aurora.css"
+    },
+    {
+      "id": "ember",
+      "name": "Ember Sunset",
+      "description": "Warm coral, amber and rose-gold marble",
+      "mode": "dark",
+      "cursorTheme": "Abyss",
+      "preset": "theme/presets/ember.css"
+    },
+    {
+      "id": "midnight-gold",
+      "name": "Midnight Gold",
+      "description": "Luxury dark glass with champagne gold veins",
+      "mode": "dark",
+      "cursorTheme": "Abyss",
+      "preset": "theme/presets/midnight-gold.css"
+    },
+    {
+      "id": "neon-tokyo",
+      "name": "Neon Tokyo",
+      "description": "Synthwave magenta & cyan neon marble",
+      "mode": "dark",
+      "cursorTheme": "Abyss",
+      "preset": "theme/presets/neon-tokyo.css"
+    }
+  ]
+}

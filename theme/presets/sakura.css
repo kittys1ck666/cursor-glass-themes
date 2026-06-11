@@ -1,0 +1,58 @@
+/* Sakura — pink & white, light mode */
+:root {
+  --a-theme-id: sakura;
+  --a-theme-mode: light;
+  --a-bg: #fff5f9;
+  --a-fg: #3d2835;
+  --a-fg-bright: #1f1018;
+  --a-fg-heading: #1a0d14;
+  --a-muted: #8a5a72;
+  --a-icon-fg: #2a1520;
+  --a-icon-filter: none;
+  --a-glass: rgba(255, 205, 220, 0.84);
+  --a-glass-light: rgba(255, 215, 228, 0.8);
+  --a-glass-input: rgba(255, 205, 220, 0.93);
+  --a-glass-bubble-opaque: rgba(255, 198, 216, 0.92);
+  --a-bubble-edge: rgba(230, 120, 160, 0.35);
+  --a-glass-shell-shadow: 0 8px 24px rgba(180, 80, 120, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --a-glass-light-shadow: 0 4px 16px rgba(200, 100, 140, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --a-radius: 12px;
+  --a-panel-gap: 8px;
+  --a-blur: 28px;
+  --a-blur-chat: 28px;
+  --a-blur-input: 26px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+  --a-text-shadow-sidebar: 0 1px 1px rgba(255, 255, 255, 0.6);
+  --a-sidebar-fg: #1f1018;
+  --a-sidebar-muted: #6a4558;
+  --a-sidebar-accent: #8a5068;
+  --a-link: #c43d78;
+  --a-btn-primary: #e85a8f;
+  --a-btn-primary-fg: #ffffff;
+  --a-btn-primary-hover: #d44a7f;
+  --a-btn-secondary: rgba(255, 215, 228, 0.82);
+  --a-btn-secondary-fg: #1f1018;
+  --a-btn-secondary-hover: rgba(255, 175, 205, 0.72);
+  --a-code-bg: rgba(255, 230, 240, 0.9);
+  --a-code-fg: #9b2d5a;
+  --a-header-bar: rgba(255, 215, 228, 0.78);
+  --a-hover-bg: rgba(255, 160, 190, 0.22);
+  --a-input-focus-border: rgba(220, 100, 150, 0.45);
+  --a-marble-c1: 0.98, 0.94, 0.96;
+  --a-marble-c2: 0.96, 0.82, 0.88;
+  --a-marble-c3: 0.92, 0.68, 0.78;
+  --a-marble-c4: 0.88, 0.52, 0.68;
+  --a-marble-c5: 0.95, 0.78, 0.86;
+  --a-marble-vignette: 0.22;
+  --a-marble-brightness: 1.02;
+  --a-bubble-shadow: 0 6px 20px rgba(180, 80, 120, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --a-code-block-bg: rgba(255, 220, 232, 0.72);
+  --a-selection-bg: rgba(230, 120, 160, 0.35);
+  --a-glow-1: rgba(255, 190, 210, 0.38);
+  --a-glow-2: rgba(255, 150, 185, 0.28);
+}
+
+html {
+  color-scheme: light;
+}

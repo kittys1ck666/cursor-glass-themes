@@ -1,0 +1,58 @@
+/* Ember — warm sunset coral & amber */
+:root {
+  --a-theme-id: ember;
+  --a-theme-mode: dark;
+  --a-bg: #120806;
+  --a-fg: #ffe8dc;
+  --a-fg-bright: #fff5ef;
+  --a-fg-heading: #ffffff;
+  --a-muted: #d4a088;
+  --a-icon-fg: #fff0e8;
+  --a-icon-filter: brightness(1.15);
+  --a-glass: rgba(36, 16, 12, 0.55);
+  --a-glass-light: rgba(42, 20, 14, 0.48);
+  --a-glass-input: rgba(48, 22, 16, 0.6);
+  --a-glass-bubble-opaque: rgba(52, 24, 18, 0.72);
+  --a-bubble-edge: rgba(255, 140, 90, 0.38);
+  --a-glass-shell-shadow: 0 8px 28px rgba(20, 4, 0, 0.48), inset 0 1px 0 rgba(255, 180, 140, 0.12);
+  --a-glass-light-shadow: 0 4px 18px rgba(16, 4, 0, 0.35), inset 0 1px 0 rgba(255, 160, 120, 0.1);
+  --a-radius: 12px;
+  --a-panel-gap: 8px;
+  --a-blur: 32px;
+  --a-blur-chat: 32px;
+  --a-blur-input: 20px;
+  --a-blur-light: 8px;
+  --a-text-shadow: 0 1px 4px rgba(12, 2, 0, 0.9);
+  --a-text-shadow-sidebar: 0 1px 3px rgba(10, 2, 0, 0.8);
+  --a-sidebar-fg: #fff5ef;
+  --a-sidebar-muted: #c89880;
+  --a-sidebar-accent: #e8b8a0;
+  --a-link: #ff9a60;
+  --a-btn-primary: #e86a38;
+  --a-btn-primary-fg: #fff8f4;
+  --a-btn-primary-hover: #d85a28;
+  --a-btn-secondary: rgba(48, 22, 16, 0.72);
+  --a-btn-secondary-fg: #fff5ef;
+  --a-btn-secondary-hover: rgba(180, 70, 40, 0.32);
+  --a-code-bg: rgba(28, 12, 8, 0.88);
+  --a-code-fg: #ffb070;
+  --a-header-bar: rgba(40, 18, 12, 0.76);
+  --a-hover-bg: rgba(180, 70, 40, 0.22);
+  --a-input-focus-border: rgba(255, 130, 80, 0.42);
+  --a-marble-c1: 0.05, 0.02, 0.01;
+  --a-marble-c2: 0.14, 0.05, 0.03;
+  --a-marble-c3: 0.32, 0.12, 0.06;
+  --a-marble-c4: 0.55, 0.28, 0.12;
+  --a-marble-c5: 0.78, 0.48, 0.28;
+  --a-marble-vignette: 0.44;
+  --a-marble-brightness: 0.9;
+  --a-bubble-shadow: 0 6px 24px rgba(20, 4, 0, 0.35), inset 0 1px 0 rgba(255, 160, 120, 0.1);
+  --a-code-block-bg: rgba(28, 12, 8, 0.58);
+  --a-selection-bg: rgba(255, 130, 80, 0.35);
+  --a-glow-1: rgba(180, 60, 30, 0.38);
+  --a-glow-2: rgba(140, 40, 60, 0.3);
+}
+
+html {
+  color-scheme: dark;
+}
