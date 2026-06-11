@@ -25,11 +25,49 @@ $ManifestPath = Join-Path $RepoRoot "themes.json"
 $ThemeDir     = Join-Path $env:USERPROFILE ".vscode\glass-themes"
 $SettingsPath = Join-Path $env:APPDATA "Code\User\settings.json"
 $AppFolder    = if ($Insiders) { "Microsoft VS Code Insiders" } else { "Microsoft VS Code" }
-$CodeExe      = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\Code.exe"
-$WorkbenchHtml = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
-$ProductJson   = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\resources\app\product.json"
 $ExtDir        = Join-Path $RepoRoot ".cache\extensions"
 $ExtRoot       = Join-Path $env:USERPROFILE ".vscode\extensions"
+
+function Resolve-VSCodePaths {
+    param([string]$FolderName)
+    $candidates = @(
+        Join-Path $env:LOCALAPPDATA "Programs\$FolderName"
+        (Join-Path ${env:ProgramFiles} $FolderName)
+        (Join-Path ${env:ProgramFiles(x86)} $FolderName)
+    ) | Where-Object { Test-Path $_ }
+
+    foreach ($root in $candidates) {
+        $exe = Join-Path $root "Code.exe"
+        if (-not (Test-Path $exe)) { continue }
+
+        $product = Get-ChildItem $root -Recurse -Filter "product.json" -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '[\\/]resources[\\/]app[\\/]product\.json$' } |
+            Select-Object -First 1
+        if (-not $product) { continue }
+
+        $appDir = $product.Directory.FullName
+        $workbench = Get-ChildItem $appDir -Recurse -Filter "workbench.html" -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '[\\/]workbench[\\/]workbench\.html$' } |
+            Select-Object -First 1
+        if (-not $workbench) { continue }
+
+        return @{
+            CodeExe       = $exe
+            WorkbenchHtml = $workbench.FullName
+            ProductJson   = $product.FullName
+            InstallRoot   = $root
+        }
+    }
+    return $null
+}
+
+$vscodePaths = Resolve-VSCodePaths -FolderName $AppFolder
+if (-not $vscodePaths) {
+    throw "VS Code not found. Install $AppFolder or pass -Insiders for Insiders build."
+}
+$CodeExe       = $vscodePaths.CodeExe
+$WorkbenchHtml = $vscodePaths.WorkbenchHtml
+$ProductJson   = $vscodePaths.ProductJson
 
 function Select-ThemeInteractive {
     param($ManifestObj)
@@ -141,6 +179,12 @@ function Merge-Settings {
     [System.IO.File]::WriteAllText($SettingsPath, $json, [System.Text.UTF8Encoding]::new($false))
 }
 
+function Get-VSCodeCli {
+    $cmd = Join-Path (Split-Path $CodeExe -Parent) "bin\code.cmd"
+    if (Test-Path $cmd) { return $cmd }
+    return $CodeExe
+}
+
 function Install-ExtensionVsix {
     param([string]$Url, [string]$OutName)
     if (-not (Test-Path $CodeExe)) { throw "VS Code not found at $CodeExe" }
@@ -150,13 +194,48 @@ function Install-ExtensionVsix {
         Write-Host "    Downloading $OutName ..."
         Invoke-WebRequest -Uri $Url -OutFile $out -UseBasicParsing
     }
+    $cli = Get-VSCodeCli
     $prevEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $CodeExe --install-extension $out 2>$null | Out-Null
+    $outText = & $cli --install-extension $out --force 2>&1 | Out-String
     $exit = $LASTEXITCODE
     $ErrorActionPreference = $prevEap
-    if ($exit -ne 0) { Write-Warn "Extension install may have failed for $OutName. Install manually: $out" }
-    else { Write-Ok "Installed $OutName" }
+    if ($outText -match 'successfully installed') { Write-Ok "Installed $OutName" }
+    elseif ($exit -ne 0) { Write-Warn "Extension install may have failed for $OutName. Try: code --install-extension `"$out`"" }
+    else { Write-Ok "Extension present: $OutName" }
+}
+
+function Get-RelativePathCompat {
+    param([string]$FromDir, [string]$ToPath)
+    $from = $FromDir.TrimEnd('\') + '\'
+    $fromUri = New-Object System.Uri $from
+    $toUri = New-Object System.Uri ((Resolve-Path $ToPath).Path)
+    return [Uri]::UnescapeDataString($fromUri.MakeRelativeUri($toUri).ToString()).Replace('\', '/')
+}
+
+function Get-WorkbenchProductKey {
+    param([string]$WorkbenchHtmlPath, [string]$ProductJsonPath)
+    $appDir = Split-Path $ProductJsonPath -Parent
+    $rel = Get-RelativePathCompat -FromDir $appDir -ToPath $WorkbenchHtmlPath
+    if ($rel -match '^out/(.+)$') { return $matches[1] }
+    return $rel
+}
+
+function Update-ProductJsonChecksum {
+    param([string]$ProductJsonPath, [string]$WorkbenchHtmlPath)
+    $hash = [Convert]::ToBase64String(
+        [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($WorkbenchHtmlPath))
+    ).TrimEnd('=')
+    $key = Get-WorkbenchProductKey -WorkbenchHtmlPath $WorkbenchHtmlPath -ProductJsonPath $ProductJsonPath
+    $product = Get-Content $ProductJsonPath -Raw -Encoding UTF8
+    $escapedKey = [regex]::Escape($key)
+    if ($product -match "`"$escapedKey`":\s*`"[^`"]+`"") {
+        $product = $product -replace "`"$escapedKey`":\s*`"[^`"]+`"", "`"$key`": `"$hash`""
+    } else {
+        $product = $product -replace '"vs/code/[^"]+/workbench/workbench\.html":\s*"[^"]+"', "`"$key`": `"$hash`""
+    }
+    [System.IO.File]::WriteAllText($ProductJsonPath, $product, [System.Text.UTF8Encoding]::new($false))
+    return $key
 }
 
 function Patch-Workbench {
@@ -168,8 +247,7 @@ function Patch-Workbench {
         if ($found) { $indicatorPath = Join-Path $found.FullName "src\statusbar.js" }
     }
     if (-not (Test-Path $indicatorPath)) {
-        Write-Warn "statusbar.js not found - run Enable Custom CSS and JS in VS Code after restart."
-        return
+        throw "statusbar.js not found. Install 'Custom CSS and JS' extension first (re-run without -SkipExtensions)."
     }
     $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
     $html = Get-Content $WorkbenchHtml -Raw -Encoding UTF8
@@ -187,13 +265,8 @@ function Patch-Workbench {
 "@
     $html = $html -replace '</html>', "$inject</html>"
     [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
-    $hash = [Convert]::ToBase64String(
-        [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($WorkbenchHtml))
-    ).TrimEnd('=')
-    $product = Get-Content $ProductJson -Raw -Encoding UTF8
-    $product = $product -replace '"vs/code/electron-sandbox/workbench/workbench.html":\s*"[^"]+"', "`"vs/code/electron-sandbox/workbench/workbench.html`": `"$hash`""
-    [System.IO.File]::WriteAllText($ProductJson, $product, [System.Text.UTF8Encoding]::new($false))
-    Write-Ok "Patched workbench.html + checksum"
+    $productKey = Update-ProductJsonChecksum -ProductJsonPath $ProductJson -WorkbenchHtmlPath $WorkbenchHtml
+    Write-Ok "Patched workbench.html + product.json ($productKey)"
 }
 
 $label = if ($Insiders) { "VS Code Insiders" } else { "VS Code" }
@@ -217,6 +290,8 @@ $baseTheme = if ($entry.PSObject.Properties['vscodeTheme']) { $entry.vscodeTheme
 
 Write-Step "Installing theme: $($entry.name) ($($entry.id)) for $label"
 Write-Ok $entry.description
+Write-Ok "VS Code: $($vscodePaths.CodeExe)"
+Write-Ok "Workbench: $WorkbenchHtml"
 
 Write-Step "Copying files to $ThemeDir"
 New-Item -ItemType Directory -Force -Path (Join-Path $ThemeDir "presets") | Out-Null
@@ -284,19 +359,26 @@ if (-not $SkipWorkbenchPatch) {
     }
 }
 
-Write-Host @"
+$cssExt = Get-ChildItem $ExtRoot -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+$patched = (Test-Path $WorkbenchHtml) -and ((Get-Content $WorkbenchHtml -Raw) -match 'VSCODE-CUSTOM-CSS-START')
+if (-not $cssExt) {
+    Write-Warn "Extension Custom CSS and JS not found in $ExtRoot. Re-run installer without the SkipExtensions flag."
+}
+if (-not $patched -and -not $SkipWorkbenchPatch) {
+    Write-Warn "workbench.html was not patched. Close VS Code and run installer again as Administrator."
+}
 
-  Done! Theme: $($entry.name) on $label
-
-  Next steps:
-    1. Fully quit and restart VS Code
-    2. Command Palette: Enable Custom CSS and JS
-    3. Command Palette: Fix Checksums: Apply
-    4. Restart again
-
-  Switch theme:
-    powershell -ExecutionPolicy Bypass -File "$($MyInvocation.MyCommand.Path)" -Theme $($entry.id)
-
-  Note: Agents window is Cursor-only. VS Code gets full workbench glass + marble.
-
-"@ -ForegroundColor Green
+Write-Host ""
+Write-Host "  Done! Theme: $($entry.name) on $label" -ForegroundColor Green
+Write-Host ""
+Write-Host "  Next steps:" -ForegroundColor Green
+Write-Host "    1. Fully quit and restart VS Code" -ForegroundColor Green
+Write-Host "    2. Command Palette - Enable Custom CSS and JS" -ForegroundColor Green
+Write-Host "    3. Command Palette - Fix Checksums Apply" -ForegroundColor Green
+Write-Host "    4. Restart again" -ForegroundColor Green
+Write-Host ""
+Write-Host "  Switch theme:" -ForegroundColor Green
+Write-Host "    powershell -ExecutionPolicy Bypass -File `"$($MyInvocation.MyCommand.Path)`" -Theme $($entry.id)" -ForegroundColor Green
+Write-Host ""
+Write-Host "  Note: Agents window is Cursor-only. VS Code gets full workbench glass + marble." -ForegroundColor Green
+Write-Host ""

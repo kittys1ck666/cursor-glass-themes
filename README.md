@@ -108,7 +108,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme aby
 | First patch | Run as Administrator if workbench patch fails | same |
 | Backup | `settings.json.bak-glass-theme` created automatically | same |
 
-Installers can download extension VSIX files automatically (omit `-SkipExtensions`).
+Installers download extension VSIX files automatically — **do not use `-SkipExtensions`** unless extensions are already installed.
+
+**VS Code troubleshooting:** newer builds use a versioned install folder (`electron-browser/workbench`). The installer auto-detects this. If themes still don't load: install **Custom CSS and JS** → **Enable Custom CSS and JS** → **Fix Checksums: Apply** → full restart.
 
 ---
 
