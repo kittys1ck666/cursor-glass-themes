@@ -21,7 +21,7 @@
       "name": "Noir Mono",
       "description": "Black & white high-contrast dark glass",
       "mode": "dark",
-      "cursorTheme": "Abyss",
+      "cursorTheme": "Default Dark Modern",
       "preset": "theme/presets/noir.css"
     },
     {

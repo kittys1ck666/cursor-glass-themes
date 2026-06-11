@@ -153,6 +153,16 @@ colors = {
     "breadcrumb.background": a("00"),
     "breadcrumbPicker.background": widget,
     "terminal.background": a("00"),
+    "editorGroup.border": a("00"),
+    "editorGroupHeader.tabsBorder": a("00"),
+    "tab.border": a("00"),
+    "tab.activeBorder": a("00"),
+    "tab.unfocusedActiveBorder": a("00"),
+    "panel.border": a("00"),
+    "sideBar.border": a("00"),
+    "activityBar.border": a("00"),
+    "statusBar.border": a("00"),
+    "titleBar.border": a("00"),
 }
 data = {}
 if pathlib.Path(path).exists() and pathlib.Path(path).read_text(encoding="utf-8").strip():
@@ -160,13 +170,16 @@ if pathlib.Path(path).exists() and pathlib.Path(path).read_text(encoding="utf-8"
 data["cursor.general.reduceTransparency"] = False
 data["vscode_custom_css.imports"] = [preset_url, base, ide, wb, js]
 data["vscode_custom_css.statusbar"] = True
+data["workbench.colorTheme"] = cursor_theme
 data["workbench.colorCustomizations"] = colors
 data["window.titleBarStyle"] = "custom"
 if mode == "light":
     data["workbench.preferredLightColorTheme"] = cursor_theme
+    data["workbench.preferredDarkColorTheme"] = cursor_theme
     data["window.autoDetectColorScheme"] = False
 else:
     data["workbench.preferredDarkColorTheme"] = cursor_theme
+    data["workbench.preferredLightColorTheme"] = cursor_theme
 pathlib.Path(path).write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
 PY
 

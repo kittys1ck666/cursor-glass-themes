@@ -85,13 +85,13 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
 }
 
 /* Selective nuclear — transparent everything EXCEPT glass-base styled widgets */
-body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.abyss-panel-bg):not(.abyss-panel-bg *):not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.inline-agent-tabs__title *):not(.markdown-root pre):not(.markdown-root pre *):not(.composer-code-block):not(.composer-code-block *):not(.composer-pane-controls-feedback):not(.composer-pane-controls-feedback *) {
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.abyss-panel-bg):not(.abyss-panel-bg *):not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.inline-agent-tabs__title *):not(.markdown-root pre):not(.markdown-root pre *):not(.ui-code-block):not(.ui-code-block *):not(.composer-code-block):not(.composer-code-block *):not(.composer-pane-controls-feedback):not(.composer-pane-controls-feedback *) {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
 }
 
-body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.markdown-root pre):not(.composer-code-block) {
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.markdown-root pre):not(.ui-code-block):not(.composer-code-block) {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;

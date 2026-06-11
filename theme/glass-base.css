@@ -1,9 +1,13 @@
 /* Glass base — colors come from theme/presets/*.css (load preset BEFORE this file) */
 
 :root {
+  color-scheme: var(--a-theme-mode, dark);
   --a-surface-border: var(--a-bubble-edge);
   --a-surface-bg: var(--a-glass-light);
   --a-surface-header: var(--a-glass);
+  --a-divider: var(--a-hover-bg);
+  --a-glass-shadow-outer: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --a-glass-shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.14);
   --a-glass-panel: var(--a-glass-light);
   --a-blur-panel: var(--a-blur-light);
   --a-glass-sidebar: var(--a-glass-light);
@@ -511,6 +515,8 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
   background: transparent !important;
 }
 
+/* Code blocks — bordered surfaces like tables (all presets, Agents + IDE) */
+.ui-code-block,
 .composer-code-block,
 .markdown-root pre,
 .composer-tool-call-container,
@@ -518,10 +524,36 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
 .composer-code-block-content {
   background: var(--a-code-block-bg) !important;
   background-color: var(--a-code-block-bg) !important;
-  backdrop-filter: blur(var(--a-blur-light)) saturate(1.3) !important;
-  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.3) !important;
-  border: 1px solid var(--a-bubble-edge) !important;
-  border-radius: 8px !important;
+  backdrop-filter: blur(var(--a-blur-light)) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-light)) saturate(1.4) !important;
+  border: 1px solid var(--a-surface-border) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-shadow-soft) !important;
+  margin: 10px 0 !important;
+  overflow: hidden !important;
+  color: var(--a-fg) !important;
+}
+
+.ui-code-block pre,
+.ui-code-block code,
+.composer-code-block pre,
+.composer-code-block code,
+.markdown-root pre code,
+.composer-code-block-content pre,
+.composer-code-block-content code {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--a-code-fg) !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+.ui-scroll-area .ui-code-block,
+.composer-human-message .ui-code-block,
+.composer-tool-call-container .ui-code-block,
+.markdown-root .ui-code-block {
+  border: 1px solid var(--a-surface-border) !important;
 }
 
 .composer-human-message-content {

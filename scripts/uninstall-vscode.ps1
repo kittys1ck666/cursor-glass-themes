@@ -1,10 +1,13 @@
 #Requires -Version 5.1
+param([switch]$Insiders)
+
 $ErrorActionPreference = "Stop"
 
-$ThemeDir = Join-Path $env:USERPROFILE ".cursor\cursor-abyss-glass"
-$SettingsPath = Join-Path $env:APPDATA "Cursor\User\settings.json"
-$WorkbenchHtml = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
-$ProductJson   = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\product.json"
+$ThemeDir = Join-Path $env:USERPROFILE ".vscode\glass-themes"
+$SettingsPath = Join-Path $env:APPDATA "Code\User\settings.json"
+$AppFolder = if ($Insiders) { "Microsoft VS Code Insiders" } else { "Microsoft VS Code" }
+$WorkbenchHtml = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
+$ProductJson = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\resources\app\product.json"
 
 Write-Host "`n==> Removing workbench patch" -ForegroundColor Cyan
 if (Test-Path $WorkbenchHtml) {
@@ -12,7 +15,6 @@ if (Test-Path $WorkbenchHtml) {
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', ''
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', ''
     [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
-
     $hash = [Convert]::ToBase64String(
         [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($WorkbenchHtml))
     ).TrimEnd('=')
@@ -28,7 +30,6 @@ if (Test-Path $SettingsPath) {
     @(
         'vscode_custom_css.imports',
         'vscode_custom_css.statusbar',
-        'cursor.general.reduceTransparency',
         'workbench.colorCustomizations',
         'workbench.colorTheme',
         'window.titleBarStyle'
@@ -47,4 +48,4 @@ if (Test-Path $ThemeDir) {
     Write-Host "    $ThemeDir removed" -ForegroundColor Green
 }
 
-Write-Host "`nRestart Cursor. Restore settings from settings.json.bak-glass-theme if needed.`n" -ForegroundColor Yellow
+Write-Host "`nRestart VS Code. Restore settings from settings.json.bak-glass-theme if needed.`n" -ForegroundColor Yellow

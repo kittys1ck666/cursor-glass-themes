@@ -1,13 +1,15 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Install Cursor Glass theme (Agents window + WebGL marble).
+  Install Glass Themes for Microsoft VS Code (workbench glass + WebGL marble).
 .PARAMETER Theme
-  Theme id from themes.json (abyss, sakura, noir, porcelain, aurora, ember, midnight-gold, neon-tokyo).
-  If omitted, shows interactive picker.
+  Theme id from themes.json (abyss, sakura, noir, ...).
+.PARAMETER Insiders
+  Target VS Code Insiders instead of stable.
 #>
 param(
     [string]$Theme,
+    [switch]$Insiders,
     [switch]$SkipExtensions,
     [switch]$SkipWorkbenchPatch
 )
@@ -20,12 +22,14 @@ function Write-Warn($msg) { Write-Host "    $msg" -ForegroundColor Yellow }
 
 $RepoRoot     = Split-Path -Parent $PSScriptRoot
 $ManifestPath = Join-Path $RepoRoot "themes.json"
-$ThemeDir     = Join-Path $env:USERPROFILE ".cursor\cursor-abyss-glass"
-$SettingsPath = Join-Path $env:APPDATA "Cursor\User\settings.json"
-$CursorExe    = Join-Path $env:LOCALAPPDATA "Programs\cursor\Cursor.exe"
-$WorkbenchHtml = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
-$ProductJson   = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\product.json"
+$ThemeDir     = Join-Path $env:USERPROFILE ".vscode\glass-themes"
+$SettingsPath = Join-Path $env:APPDATA "Code\User\settings.json"
+$AppFolder    = if ($Insiders) { "Microsoft VS Code Insiders" } else { "Microsoft VS Code" }
+$CodeExe      = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\Code.exe"
+$WorkbenchHtml = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
+$ProductJson   = Join-Path $env:LOCALAPPDATA "Programs\$AppFolder\resources\app\product.json"
 $ExtDir        = Join-Path $RepoRoot ".cache\extensions"
+$ExtRoot       = Join-Path $env:USERPROFILE ".vscode\extensions"
 
 function Select-ThemeInteractive {
     param($ManifestObj)
@@ -64,63 +68,56 @@ function To-FileUrl([string]$Path) {
 
 function Get-WorkbenchColorCustomizations {
     param([string]$PresetCss, [string]$Mode)
-
     $base = if ($Mode -eq 'light') { '#f6f6f4' } else { '#191c22' }
-    if ($PresetCss -match '--a-wb-surface:\s*(#[0-9a-fA-F]{6})') {
-        $base = $matches[1]
-    } elseif ($PresetCss -match '--a-bg:\s*(#[0-9a-fA-F]{6})') {
-        $base = $matches[1]
-    }
-
+    if ($PresetCss -match '--a-wb-surface:\s*(#[0-9a-fA-F]{6})') { $base = $matches[1] }
+    elseif ($PresetCss -match '--a-bg:\s*(#[0-9a-fA-F]{6})') { $base = $matches[1] }
     $h = $base.TrimStart('#')
     function Alpha([string]$Hex, [string]$Suffix) { return "#$Hex$Suffix" }
-
     $widgetBg = if ($Mode -eq 'light') { Alpha $h 'ee' } else { Alpha $h 'dd' }
     $widgetBgSolid = if ($Mode -eq 'light') { Alpha $h 'f5' } else { Alpha $h 'ee' }
-
     return @{
-        'editor.background'                   = Alpha $h '00'
-        'sideBar.background'                  = Alpha $h '00'
-        'activityBar.background'              = Alpha $h '00'
-        'panel.background'                    = Alpha $h '00'
-        'editorGroupHeader.tabsBackground'    = Alpha $h '00'
-        'editorGroupHeader.noTabsBackground'  = Alpha $h '00'
-        'statusBar.background'                = Alpha $h '00'
-        'titleBar.activeBackground'           = Alpha $h '00'
-        'titleBar.inactiveBackground'         = Alpha $h '00'
-        'tab.activeBackground'                = Alpha $h '30'
-        'tab.inactiveBackground'              = Alpha $h '15'
-        'tab.hoverBackground'                 = Alpha $h '30'
-        'tab.unfocusedHoverBackground'        = Alpha $h '20'
-        'sideBarSectionHeader.background'     = Alpha $h '20'
-        'list.activeSelectionBackground'      = Alpha $h '40'
-        'list.inactiveSelectionBackground'    = Alpha $h '25'
-        'list.hoverBackground'                = Alpha $h '25'
-        'list.focusBackground'                = Alpha $h '40'
-        'editorWidget.background'             = $widgetBg
-        'editorSuggestWidget.background'      = $widgetBgSolid
-        'editorHoverWidget.background'        = $widgetBg
-        'peekViewEditor.background'           = Alpha $h 'cc'
-        'peekViewResult.background'           = Alpha $h 'cc'
-        'peekViewTitle.background'            = $widgetBg
-        'input.background'                    = Alpha $h '55'
-        'dropdown.background'                 = $widgetBg
-        'menu.background'                     = $widgetBgSolid
-        'notifications.background'            = $widgetBgSolid
-        'debugToolBar.background'             = $widgetBg
-        'breadcrumb.background'               = Alpha $h '00'
-        'breadcrumbPicker.background'         = $widgetBg
-        'terminal.background'                 = Alpha $h '00'
-        'editorGroup.border'                  = Alpha $h '00'
-        'editorGroupHeader.tabsBorder'        = Alpha $h '00'
-        'tab.border'                          = Alpha $h '00'
-        'tab.activeBorder'                    = Alpha $h '00'
-        'tab.unfocusedActiveBorder'           = Alpha $h '00'
-        'panel.border'                        = Alpha $h '00'
-        'sideBar.border'                      = Alpha $h '00'
-        'activityBar.border'                  = Alpha $h '00'
-        'statusBar.border'                    = Alpha $h '00'
-        'titleBar.border'                     = Alpha $h '00'
+        'editor.background' = Alpha $h '00'
+        'sideBar.background' = Alpha $h '00'
+        'activityBar.background' = Alpha $h '00'
+        'panel.background' = Alpha $h '00'
+        'editorGroupHeader.tabsBackground' = Alpha $h '00'
+        'editorGroupHeader.noTabsBackground' = Alpha $h '00'
+        'statusBar.background' = Alpha $h '00'
+        'titleBar.activeBackground' = Alpha $h '00'
+        'titleBar.inactiveBackground' = Alpha $h '00'
+        'tab.activeBackground' = Alpha $h '30'
+        'tab.inactiveBackground' = Alpha $h '15'
+        'tab.hoverBackground' = Alpha $h '30'
+        'tab.unfocusedHoverBackground' = Alpha $h '20'
+        'sideBarSectionHeader.background' = Alpha $h '20'
+        'list.activeSelectionBackground' = Alpha $h '40'
+        'list.inactiveSelectionBackground' = Alpha $h '25'
+        'list.hoverBackground' = Alpha $h '25'
+        'list.focusBackground' = Alpha $h '40'
+        'editorWidget.background' = $widgetBg
+        'editorSuggestWidget.background' = $widgetBgSolid
+        'editorHoverWidget.background' = $widgetBg
+        'peekViewEditor.background' = Alpha $h 'cc'
+        'peekViewResult.background' = Alpha $h 'cc'
+        'peekViewTitle.background' = $widgetBg
+        'input.background' = Alpha $h '55'
+        'dropdown.background' = $widgetBg
+        'menu.background' = $widgetBgSolid
+        'notifications.background' = $widgetBgSolid
+        'debugToolBar.background' = $widgetBg
+        'breadcrumb.background' = Alpha $h '00'
+        'breadcrumbPicker.background' = $widgetBg
+        'terminal.background' = Alpha $h '00'
+        'editorGroup.border' = Alpha $h '00'
+        'editorGroupHeader.tabsBorder' = Alpha $h '00'
+        'tab.border' = Alpha $h '00'
+        'tab.activeBorder' = Alpha $h '00'
+        'tab.unfocusedActiveBorder' = Alpha $h '00'
+        'panel.border' = Alpha $h '00'
+        'sideBar.border' = Alpha $h '00'
+        'activityBar.border' = Alpha $h '00'
+        'statusBar.border' = Alpha $h '00'
+        'titleBar.border' = Alpha $h '00'
     }
 }
 
@@ -128,40 +125,25 @@ function Merge-Settings {
     param([hashtable]$Patch)
     $dir = Split-Path $SettingsPath -Parent
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-
     if (Test-Path $SettingsPath) {
-        $backup = "$SettingsPath.bak-glass-theme"
-        Copy-Item $SettingsPath $backup -Force
-    }
-
-    if (Test-Path $SettingsPath) {
+        Copy-Item $SettingsPath "$SettingsPath.bak-glass-theme" -Force
         $raw = Get-Content $SettingsPath -Raw -Encoding UTF8
-        if ($raw.Trim()) {
-            $obj = $raw | ConvertFrom-Json
-        } else {
-            $obj = New-Object PSObject
-        }
+        $obj = if ($raw.Trim()) { $raw | ConvertFrom-Json } else { New-Object PSObject }
     } else {
         $obj = New-Object PSObject
     }
-
     foreach ($key in $Patch.Keys) {
         $val = $Patch[$key]
         $prop = $obj.PSObject.Properties[$key]
-        if ($prop) {
-            $prop.Value = $val
-        } else {
-            $obj | Add-Member -NotePropertyName $key -NotePropertyValue $val -Force
-        }
+        if ($prop) { $prop.Value = $val } else { $obj | Add-Member -NotePropertyName $key -NotePropertyValue $val -Force }
     }
-
     $json = $obj | ConvertTo-Json -Depth 30
     [System.IO.File]::WriteAllText($SettingsPath, $json, [System.Text.UTF8Encoding]::new($false))
 }
 
 function Install-ExtensionVsix {
     param([string]$Url, [string]$OutName)
-    if (-not (Test-Path $CursorExe)) { throw "Cursor not found at $CursorExe" }
+    if (-not (Test-Path $CodeExe)) { throw "VS Code not found at $CodeExe" }
     New-Item -ItemType Directory -Force -Path $ExtDir | Out-Null
     $out = Join-Path $ExtDir $OutName
     if (-not (Test-Path $out)) {
@@ -170,36 +152,29 @@ function Install-ExtensionVsix {
     }
     $prevEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $CursorExe --install-extension $out 2>$null | Out-Null
+    & $CodeExe --install-extension $out 2>$null | Out-Null
     $exit = $LASTEXITCODE
     $ErrorActionPreference = $prevEap
-    if ($exit -ne 0) {
-        Write-Warn "Extension install may have failed for $OutName. Install manually: $out"
-    } else {
-        Write-Ok "Installed $OutName"
-    }
+    if ($exit -ne 0) { Write-Warn "Extension install may have failed for $OutName. Install manually: $out" }
+    else { Write-Ok "Installed $OutName" }
 }
 
 function Patch-Workbench {
     param([string]$CombinedCss, [string]$JsContent)
-
-    if (-not (Test-Path $WorkbenchHtml)) { throw "workbench.html not found" }
-
-    $indicatorPath = Join-Path $env:USERPROFILE ".cursor\extensions\be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
+    if (-not (Test-Path $WorkbenchHtml)) { throw "workbench.html not found at $WorkbenchHtml" }
+    $indicatorPath = Join-Path $ExtRoot "be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
     if (-not (Test-Path $indicatorPath)) {
-        $found = Get-ChildItem (Join-Path $env:USERPROFILE ".cursor\extensions") -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+        $found = Get-ChildItem $ExtRoot -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) { $indicatorPath = Join-Path $found.FullName "src\statusbar.js" }
     }
     if (-not (Test-Path $indicatorPath)) {
-        Write-Warn "statusbar.js not found - run Enable Custom CSS and JS in Cursor after restart."
+        Write-Warn "statusbar.js not found - run Enable Custom CSS and JS in VS Code after restart."
         return
     }
-
     $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
     $html = Get-Content $WorkbenchHtml -Raw -Encoding UTF8
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', ''
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', ''
-
     $id = [guid]::NewGuid().ToString()
     $inject = @"
 <!-- !! VSCODE-CUSTOM-CSS-SESSION-ID $id !! -->
@@ -212,91 +187,82 @@ function Patch-Workbench {
 "@
     $html = $html -replace '</html>', "$inject</html>"
     [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
-
     $hash = [Convert]::ToBase64String(
         [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($WorkbenchHtml))
     ).TrimEnd('=')
-
     $product = Get-Content $ProductJson -Raw -Encoding UTF8
     $product = $product -replace '"vs/code/electron-sandbox/workbench/workbench.html":\s*"[^"]+"', "`"vs/code/electron-sandbox/workbench/workbench.html`": `"$hash`""
     [System.IO.File]::WriteAllText($ProductJson, $product, [System.Text.UTF8Encoding]::new($false))
     Write-Ok "Patched workbench.html + checksum"
 }
 
+$label = if ($Insiders) { "VS Code Insiders" } else { "VS Code" }
 Write-Host @"
 
-  Cursor Glass Themes - Installer
-  Glass Agents window + animated marble background
+  Glass Themes — $label Installer
+  Workbench glass + WebGL marble (8 presets)
 
 "@ -ForegroundColor White
 
 if (-not (Test-Path $ManifestPath)) { throw "themes.json not found at $ManifestPath" }
 $Manifest = Get-Content $ManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
 if (-not $Theme) { $Theme = Select-ThemeInteractive -ManifestObj $Manifest }
 $entry = Resolve-ThemeEntry -Id $Theme -ManifestObj $Manifest
 
-$PresetSrc  = Join-Path $RepoRoot ($entry.preset -replace '/', '\')
-$BaseSrc    = Join-Path $RepoRoot "theme\glass-base.css"
-$IdeSrc     = Join-Path $RepoRoot "theme\ide-agent.css"
-$WbSrc      = Join-Path $RepoRoot "theme\ide-workbench.css"
-$MarbleSrc  = Join-Path $RepoRoot "theme\marble.js"
+$PresetSrc = Join-Path $RepoRoot ($entry.preset -replace '/', '\')
+$BaseSrc   = Join-Path $RepoRoot "theme\glass-base.css"
+$WbSrc     = Join-Path $RepoRoot "theme\ide-workbench.css"
+$MarbleSrc = Join-Path $RepoRoot "theme\marble.js"
+$baseTheme = if ($entry.PSObject.Properties['vscodeTheme']) { $entry.vscodeTheme } else { $entry.cursorTheme }
 
-if (-not (Test-Path $PresetSrc)) { throw "Preset not found: $PresetSrc" }
-
-Write-Step "Installing theme: $($entry.name) ($($entry.id))"
+Write-Step "Installing theme: $($entry.name) ($($entry.id)) for $label"
 Write-Ok $entry.description
 
 Write-Step "Copying files to $ThemeDir"
 New-Item -ItemType Directory -Force -Path (Join-Path $ThemeDir "presets") | Out-Null
 Copy-Item $PresetSrc (Join-Path $ThemeDir "presets\$($entry.id).css") -Force
 Copy-Item $BaseSrc (Join-Path $ThemeDir "glass-base.css") -Force
-Copy-Item $IdeSrc (Join-Path $ThemeDir "ide-agent.css") -Force
 Copy-Item $WbSrc (Join-Path $ThemeDir "ide-workbench.css") -Force
 Copy-Item $MarbleSrc (Join-Path $ThemeDir "marble.js") -Force
 Get-ChildItem (Join-Path $RepoRoot "theme\presets\*.css") | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $ThemeDir "presets\$($_.Name)") -Force
 }
-@{ id = $entry.id; name = $entry.name; mode = $entry.mode } | ConvertTo-Json | Set-Content (Join-Path $ThemeDir "active-theme.json") -Encoding UTF8
+@{ id = $entry.id; name = $entry.name; mode = $entry.mode; editor = "vscode" } | ConvertTo-Json | Set-Content (Join-Path $ThemeDir "active-theme.json") -Encoding UTF8
 Write-Ok "Theme files copied"
 
 $PresetPath = Join-Path $ThemeDir "presets\$($entry.id).css"
 $BasePath   = Join-Path $ThemeDir "glass-base.css"
-$IdePath    = Join-Path $ThemeDir "ide-agent.css"
 $WbPath     = Join-Path $ThemeDir "ide-workbench.css"
 $JsPath     = Join-Path $ThemeDir "marble.js"
 $BundlePath = Join-Path $ThemeDir "active-glass.css"
-
-$presetRaw = Get-Content $PresetPath -Raw -Encoding UTF8
-$combined = $presetRaw + "`n`n" + (Get-Content $BasePath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $IdePath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $WbPath -Raw -Encoding UTF8)
+$presetRaw  = Get-Content $PresetPath -Raw -Encoding UTF8
+$combined   = $presetRaw + "`n`n" + (Get-Content $BasePath -Raw -Encoding UTF8) + "`n`n" + (Get-Content $WbPath -Raw -Encoding UTF8)
 [System.IO.File]::WriteAllText($BundlePath, $combined, [System.Text.UTF8Encoding]::new($false))
 
-Write-Step "Updating Cursor settings"
+Write-Step "Updating VS Code settings"
 $imports = @(
     (To-FileUrl $PresetPath),
     (To-FileUrl $BasePath),
-    (To-FileUrl $IdePath),
     (To-FileUrl $WbPath),
     (To-FileUrl $JsPath)
 )
 $settingsPatch = @{
-    "cursor.general.reduceTransparency" = $false
-    "vscode_custom_css.imports"           = $imports
-    "vscode_custom_css.statusbar"         = $true
-    "workbench.colorTheme"                = $entry.cursorTheme
-    "workbench.colorCustomizations"       = (Get-WorkbenchColorCustomizations -PresetCss $presetRaw -Mode $entry.mode)
-    "window.titleBarStyle"                = "custom"
+    "vscode_custom_css.imports"     = $imports
+    "vscode_custom_css.statusbar"  = $true
+    "workbench.colorTheme"         = $baseTheme
+    "workbench.colorCustomizations" = (Get-WorkbenchColorCustomizations -PresetCss $presetRaw -Mode $entry.mode)
+    "window.titleBarStyle"         = "custom"
 }
 if ($entry.mode -eq "light") {
-    $settingsPatch["workbench.preferredLightColorTheme"] = $entry.cursorTheme
-    $settingsPatch["workbench.preferredDarkColorTheme"] = $entry.cursorTheme
+    $settingsPatch["workbench.preferredLightColorTheme"] = $baseTheme
+    $settingsPatch["workbench.preferredDarkColorTheme"] = $baseTheme
     $settingsPatch["window.autoDetectColorScheme"] = $false
 } else {
-    $settingsPatch["workbench.preferredDarkColorTheme"] = $entry.cursorTheme
-    $settingsPatch["workbench.preferredLightColorTheme"] = $entry.cursorTheme
+    $settingsPatch["workbench.preferredDarkColorTheme"] = $baseTheme
+    $settingsPatch["workbench.preferredLightColorTheme"] = $baseTheme
 }
 Merge-Settings $settingsPatch
-Write-Ok "settings.json updated (Cursor theme: $($entry.cursorTheme))"
+Write-Ok "settings.json updated (base theme: $baseTheme)"
 
 if (-not $SkipExtensions) {
     Write-Step "Installing required extensions"
@@ -309,28 +275,28 @@ if (-not $SkipExtensions) {
 }
 
 if (-not $SkipWorkbenchPatch) {
-    Write-Step "Patching Cursor workbench"
+    Write-Step "Patching VS Code workbench"
     try {
         Patch-Workbench -CombinedCss $combined -JsContent (Get-Content $JsPath -Raw -Encoding UTF8)
     } catch {
         Write-Warn $_.Exception.Message
-        Write-Warn "Run Cursor as Administrator, then: Enable Custom CSS and JS -> Fix Checksums: Apply"
+        Write-Warn "Run VS Code as Administrator, then: Enable Custom CSS and JS -> Fix Checksums: Apply"
     }
 }
 
 Write-Host @"
 
-  Done! Theme: $($entry.name)
+  Done! Theme: $($entry.name) on $label
 
   Next steps:
-    1. Fully quit and restart Cursor
-    2. Open the Agents window (glass layout)
-    3. Command Palette if needed: Enable Custom CSS and JS -> Fix Checksums: Apply
+    1. Fully quit and restart VS Code
+    2. Command Palette: Enable Custom CSS and JS
+    3. Command Palette: Fix Checksums: Apply
     4. Restart again
 
-  Switch theme later:
+  Switch theme:
     powershell -ExecutionPolicy Bypass -File "$($MyInvocation.MyCommand.Path)" -Theme $($entry.id)
 
-  After Cursor updates, re-run the same command with your theme id.
+  Note: Agents window is Cursor-only. VS Code gets full workbench glass + marble.
 
 "@ -ForegroundColor Green

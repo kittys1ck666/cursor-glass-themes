@@ -508,7 +508,15 @@
     return okGlass;
   }
 
+  function syncThemeModeAttr() {
+    var mode = (getComputedStyle(document.documentElement).getPropertyValue("--a-theme-mode") || "").trim();
+    if (mode === "light" || mode === "dark") {
+      document.documentElement.setAttribute("data-a-theme-mode", mode);
+    }
+  }
+
   function boot() {
+    syncThemeModeAttr();
     injectTransparencyFix();
     attachGlobal();
     tryAttachPanel();
