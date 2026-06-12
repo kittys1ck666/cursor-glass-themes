@@ -87,6 +87,22 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme sak
 powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme abyss -Insiders
 ```
 
+### macOS
+
+```bash
+git clone https://github.com/kittys1ck666/cursor-glass-themes.git
+cd cursor-glass-themes
+
+chmod +x scripts/install-vscode.sh scripts/uninstall-vscode.sh
+./scripts/install-vscode.sh abyss
+./scripts/install-vscode.sh sakura
+
+# VS Code Insiders
+./scripts/install-vscode.sh abyss --insiders
+```
+
+The script patches `Visual Studio Code.app` in `/Applications`. If the patch step needs elevated rights, it re-runs itself with `sudo` (enter your Mac password when prompted). **Fully quit VS Code** before installing.
+
 **After install**
 
 1. Fully quit VS Code  
@@ -99,7 +115,10 @@ If patching failed, close VS Code, run the installer **as Administrator**, then 
 
 **Installed to:** `~/.vscode/glass-themes/`
 
-**Uninstall:** `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-vscode.ps1`
+**Uninstall**
+
+- Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-vscode.ps1`
+- macOS: `./scripts/uninstall-vscode.sh`
 
 ---
 
@@ -133,7 +152,9 @@ If the line matches, **Enable Custom CSS and JS** is optional.
 **Кратко (RU):**
 
 - Расширение: только **be5invis.vscode-custom-css** (в Marketplace — *Custom CSS and JS Loader*). Другие «Custom CSS» от других авторов — удалить.
-- Полностью закройте VS Code → из папки репозитория: `powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme abyss` (PowerShell от администратора, если патч не записывается).
+- Полностью закройте VS Code → из папки репозитория:
+  - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme abyss`
+  - macOS: `chmod +x scripts/install-vscode.sh && ./scripts/install-vscode.sh abyss` (sudo, если патч не записывается)
 - Command Palette → **Enable Custom CSS and JS** → **Fix Checksums: Apply** → перезапуск.
 - После обновления VS Code — снова `install-vscode.ps1`.
 
@@ -157,8 +178,10 @@ cursor-glass-themes/
     ├── install.ps1             # Cursor (Windows)
     ├── install.sh              # Cursor (macOS / Linux)
     ├── install-vscode.ps1      # VS Code (Windows)
+    ├── install-vscode.sh       # VS Code (macOS / Linux)
     ├── uninstall.ps1           # Cursor
-    └── uninstall-vscode.ps1    # VS Code
+    ├── uninstall-vscode.ps1    # VS Code (Windows)
+    └── uninstall-vscode.sh     # VS Code (macOS / Linux)
 ```
 
 **CSS load order:** `preset` → `glass-base` → `ide-agent` (Cursor only) → `ide-workbench` → `marble.js`
