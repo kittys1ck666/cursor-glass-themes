@@ -9,23 +9,20 @@
   --a-glass-shadow-outer: 0 8px 24px rgba(0, 0, 0, 0.22);
   --a-glass-shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.14);
   --a-glass-panel: var(--a-glass-light);
-  --a-blur-panel: var(--a-blur-light);
+  /* Prefer preset --a-blur for chrome/panels (was stuck on --a-blur-light = 8px) */
+  --a-blur-panel: var(--a-blur, var(--a-blur-light));
   --a-glass-sidebar: var(--a-glass-light);
   --a-glass-chrome: var(--a-glass-panel);
-  --a-blur-sidebar: var(--a-blur-light);
+  --a-blur-sidebar: var(--a-blur-panel);
   --a-blur-chrome: var(--a-blur-panel);
   --a-bubble-shadow: var(--a-glass-light-shadow);
   --a-code-block-bg: var(--a-code-bg);
   --a-hover-segment-bg: var(--a-hover-bg);
-  --a-selection-bg: rgba(100, 150, 255, 0.35);
-  --a-glow-1: rgba(128, 128, 128, 0.2);
-  --a-glow-2: rgba(128, 128, 128, 0.15);
-  --a-btn-primary: var(--a-link);
-  --a-btn-primary-fg: var(--a-fg-bright);
-  --a-btn-primary-hover: var(--a-link);
-  --a-btn-secondary: var(--a-glass);
-  --a-btn-secondary-fg: var(--a-fg-bright);
-  --a-btn-secondary-hover: var(--a-hover-bg);
+  /* Do not override --a-selection-bg / --a-glow-* / --a-btn-* — presets own those */
+  --a-auxiliary-bg: transparent;
+  --a-auxiliary-border: var(--a-bubble-edge);
+  --a-scrollbar-thumb: var(--a-bubble-edge);
+  --a-scrollbar-track: transparent;
   --cursor-text-primary: var(--a-fg-bright) !important;
   --cursor-text-secondary: var(--a-muted) !important;
   --glass-chat-surface-background: transparent !important;
@@ -33,6 +30,7 @@
   --composer-pane-background: transparent !important;
   --cursor-bg-editor: transparent !important;
   --cursor-bg-chrome: transparent !important;
+  scrollbar-color: var(--a-scrollbar-thumb) var(--a-scrollbar-track);
 }
 
 body[data-cursor-glass-mode="true"] [data-component="root"],
@@ -313,13 +311,6 @@ body::before {
   content: none !important;
 }
 
-@keyframes abyss-drift {
-  0%   { transform: translate(0%, 0%) scale(1); }
-  33%  { transform: translate(-2.5%, 1.5%) scale(1.04); }
-  66%  { transform: translate(1.5%, -2%) scale(1.03); }
-  100% { transform: translate(0%, 0%) scale(1); }
-}
-
 /* Chat content above panel canvas */
 .composer-messages-scroll-container,
 .virtualized-composer-messages-scroll-container,
@@ -470,7 +461,7 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
   padding-inline: 0 !important;
 }
 
-/* Glass bubbles — colors everywhere; full-width layout IDE only */
+/* Glass bubbles — human prompts */
 .composer-human-message:not(:has(.ui-prompt-input)),
 body[data-cursor-glass-mode="true"] .composer-human-message:not(:has(.ui-prompt-input)),
 body[data-cursor-glass-mode="true"] .composer-human-message.standalone-glass:not(:has(.ui-prompt-input)),
@@ -483,9 +474,29 @@ body[data-cursor-glass-mode="true"] .composer-human-message-container .composer-
   border-radius: var(--a-radius) !important;
   box-shadow: var(--a-bubble-shadow) !important;
   color: var(--a-fg-bright) !important;
-  max-height: min(50vh, 520px) !important;
+  max-height: min(70vh, 720px) !important;
   overflow-y: auto !important;
   word-break: break-word !important;
+}
+
+/* AI / assistant responses — readable glass surface on marble */
+.composer-human-ai-pair-container > .markdown-root,
+.composer-human-ai-pair-container .markdown-root:not(.composer-human-message .markdown-root):not(.ui-prompt-input .markdown-root),
+.virtualized-composer-messages-content-shell > .markdown-root,
+.composer-messages-content-shell > .markdown-root,
+.glass-ai-message {
+  background: var(--a-glass-light) !important;
+  background-color: var(--a-glass-light) !important;
+  backdrop-filter: blur(var(--a-blur-chat)) saturate(1.45) !important;
+  -webkit-backdrop-filter: blur(var(--a-blur-chat)) saturate(1.45) !important;
+  border: 1px solid var(--a-bubble-edge) !important;
+  border-radius: var(--a-radius) !important;
+  box-shadow: var(--a-glass-light-shadow) !important;
+  padding: 10px 14px !important;
+  margin: 6px 0 12px !important;
+  color: var(--a-fg) !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .composer-human-message:not(:has(.ui-prompt-input)),
@@ -656,6 +667,14 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
   margin: 4px 0 !important;
 }
 
+/* Nested lists still get a subtle left accent for hierarchy */
+.markdown-root li > ul,
+.markdown-root li > ol {
+  border-left: 2px solid var(--a-divider) !important;
+  border-radius: 0 !important;
+  padding-left: 14px !important;
+}
+
 .ui-scroll-area .markdown-root table,
 .composer-human-message .markdown-root table,
 .composer-tool-call-container .markdown-root table {
@@ -680,7 +699,40 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
   color: var(--a-fg-bright) !important;
 }
 
-.part.auxiliarybar ::selection { background: var(--a-selection-bg) !important; }
+::selection,
+.monaco-workbench ::selection,
+.part.auxiliarybar ::selection,
+.markdown-root ::selection,
+.composer-human-message ::selection {
+  background: var(--a-selection-bg, rgba(100, 150, 255, 0.35)) !important;
+}
+
+/* Glass scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--a-scrollbar-thumb) var(--a-scrollbar-track);
+}
+
+::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--a-scrollbar-thumb) !important;
+  border-radius: 999px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--a-muted) !important;
+  background-clip: padding-box !important;
+}
 
 /* ===== Followup input — glass bubble ===== */
 body[data-cursor-glass-mode="true"] [data-component="agent-panel"],
@@ -750,6 +802,11 @@ body[data-cursor-glass-mode="true"] .ai-input-full-input-box {
   background-color: var(--a-btn-primary) !important;
   border-radius: 999px !important;
   opacity: 1 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.ai-input-full-input-box .input-box-submit-button-container:hover {
+  background-color: var(--a-btn-primary-hover, var(--a-btn-primary)) !important;
 }
 
 .ai-input-full-input-box .input-box-submit-button-part,
@@ -1218,4 +1275,21 @@ body[data-cursor-glass-mode="true"] .ui-file-tree,
 body[data-cursor-glass-mode="true"] .glass-bookmark-item {
   color: var(--a-fg-bright) !important;
   text-shadow: var(--a-text-shadow-sidebar) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer-human-message,
+  .glass-ai-message,
+  .composer-human-ai-pair-container .markdown-root,
+  .ui-code-block,
+  .composer-code-block,
+  .markdown-root table,
+  .markdown-root > ul,
+  .markdown-root > ol,
+  .markdown-root blockquote,
+  .ai-input-full-input-box,
+  .ui-prompt-input {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }

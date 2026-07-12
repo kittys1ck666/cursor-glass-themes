@@ -84,14 +84,15 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar .
   z-index: 1 !important;
 }
 
-/* Selective nuclear — transparent everything EXCEPT glass-base styled widgets */
-body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.abyss-panel-bg):not(.abyss-panel-bg *):not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.inline-agent-tabs__title *):not(.markdown-root pre):not(.markdown-root pre *):not(.ui-code-block):not(.ui-code-block *):not(.composer-code-block):not(.composer-code-block *):not(.composer-pane-controls-feedback):not(.composer-pane-controls-feedback *) {
+/* Selective nuclear — transparent shells EXCEPT glass-base styled widgets.
+   Keep markdown / tool-call / code surfaces readable on marble. */
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.abyss-panel-bg):not(.abyss-panel-bg *):not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.inline-agent-tabs__title *):not(.markdown-root):not(.markdown-root *):not(.ui-code-block):not(.ui-code-block *):not(.composer-code-block):not(.composer-code-block *):not(.composer-code-block-content):not(.composer-code-block-content *):not(.composer-tool-call-container):not(.composer-tool-call-container *):not(.composer-tool-call-simple-layout):not(.composer-tool-call-simple-layout *):not(.composer-pane-controls-feedback):not(.composer-pane-controls-feedback *):not(.glass-ai-message):not(.glass-ai-message *) {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
 }
 
-body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.markdown-root pre):not(.ui-code-block):not(.composer-code-block) {
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.auxiliarybar *:not(.ui-prompt-input):not(.ui-prompt-input *):not(.ai-input-full-input-box):not(.ai-input-full-input-box *):not(.composer-human-message):not(.composer-human-message *):not(.composite.title):not(.composite.title *):not(.inline-agent-tabs__title):not(.markdown-root):not(.markdown-root *):not(.ui-code-block):not(.ui-code-block *):not(.composer-code-block):not(.composer-code-block *):not(.composer-code-block-content):not(.composer-tool-call-container):not(.composer-tool-call-container *):not(.composer-tool-call-simple-layout):not(.composer-tool-call-simple-layout *):not(.glass-ai-message):not(.glass-ai-message *) {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;

@@ -31,9 +31,30 @@ Light presets (`sakura`, `porcelain`) use **dark text** for readability on pale 
 
 ---
 
+## Install — Cursor (Windows, easy — no git)
+
+Open **PowerShell** and paste:
+
+```powershell
+irm https://raw.githubusercontent.com/kittys1ck666/cursor-glass-themes/cursor/fix-installer-bugs-ccba/scripts/bootstrap-windows.ps1 | iex
+```
+
+Or pick a theme:
+
+```powershell
+$u='https://raw.githubusercontent.com/kittys1ck666/cursor-glass-themes/cursor/fix-installer-bugs-ccba/scripts/bootstrap-windows.ps1'
+iwr $u -OutFile $env:TEMP\glass-boot.ps1
+powershell -ExecutionPolicy Bypass -File $env:TEMP\glass-boot.ps1 -Theme sakura
+```
+
+Then: **fully quit Cursor → start again**.  
+No “Enable Custom CSS” step — the installer patches workbench directly (extensions are optional helpers and download automatically).
+
+---
+
 ## Install — Cursor
 
-### Windows
+### Windows (from folder)
 
 ```powershell
 git clone https://github.com/kittys1ck666/cursor-glass-themes.git
@@ -50,7 +71,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Theme noir -Skip
 ### macOS / Linux
 
 ```bash
-chmod +x scripts/install.sh
+chmod +x scripts/install.sh scripts/uninstall.sh
 ./scripts/install.sh           # interactive
 ./scripts/install.sh sakura    # direct
 ```
@@ -58,15 +79,43 @@ chmod +x scripts/install.sh
 **After install**
 
 1. Fully quit Cursor  
-2. Command Palette → **Enable Custom CSS and JS**  
-3. Command Palette → **Fix Checksums: Apply**  
-4. Restart Cursor  
+2. Start Cursor again  
+
+If Cursor warns about installation integrity: Command Palette → **Fix Checksums: Apply** → restart once.
+
+You do **not** need **Enable Custom CSS and JS** when the installer reports a successful workbench patch.
 
 **Installed to:** `~/.cursor/cursor-abyss-glass/`
 
-**Switch theme:** re-run `install.ps1 -Theme <id>` — no uninstall needed.
+**Switch theme:** re-run `install.sh sakura` / `install.ps1 -Theme sakura` — no uninstall needed.
 
-**Uninstall:** `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1`
+**Uninstall**
+
+- Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1`
+- macOS / Linux: `./scripts/uninstall.sh`
+
+Uninstall restores `settings.json` from `settings.json.bak-glass-theme` when available.
+
+> Note: each install overwrites `.bak-glass-theme` with the *current* settings. To keep a pristine pre-glass backup, copy it aside before switching themes.
+
+**Cursor troubleshooting**
+
+| Symptom | Fix |
+|---------|-----|
+| Theme plain / no marble | Fully quit Cursor → Fix Checksums: Apply → restart. Re-run installer after Cursor updates. |
+| No “Enable Custom CSS” command | Normal — not required. Theme is injected into workbench.html. |
+| `cursor` CLI missing (Linux) | Theme still patches workbench; optional helper extensions can be skipped. |
+| Patch fails on `/usr/share/cursor` | Installer uses `sudo` for the patch step only. Close Cursor first. |
+| Agents OK, IDE agent sidebar plain | Re-run installer (current CSS keeps markdown tables / AI glass surfaces in IDE). |
+| Debug marble attach | In `theme/marble.js` set `DEBUG = true` and/or `SHOW_HUD = true`, reinstall. |
+
+**Verify Cursor patch** (macOS/Linux):
+
+```bash
+grep -l 'VSCODE-CUSTOM-CSS-START' \
+  /Applications/Cursor.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench*.html \
+  2>/dev/null || true
+```
 
 ---
 
@@ -103,6 +152,8 @@ chmod +x scripts/install-vscode.sh scripts/uninstall-vscode.sh
 
 The script patches `Visual Studio Code.app` in `/Applications`. If the patch step needs elevated rights, it re-runs itself with `sudo` (enter your Mac password when prompted). **Fully quit VS Code** before installing.
 
+On **Linux**, the installer auto-detects common install paths (`/usr/share/code`, `~/.local/share/code`, `/opt/visual-studio-code`, …) and the `code` / `code-insiders` CLI.
+
 **After install**
 
 1. Fully quit VS Code  
@@ -118,7 +169,11 @@ If patching failed, close VS Code, run the installer **as Administrator**, then 
 **Uninstall**
 
 - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-vscode.ps1`
-- macOS: `./scripts/uninstall-vscode.sh`
+- Windows Insiders: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-vscode.ps1 -Insiders`
+- macOS / Linux: `./scripts/uninstall-vscode.sh`
+- macOS / Linux Insiders: `./scripts/uninstall-vscode.sh --insiders`
+
+Uninstall restores `settings.json` from backup when present, and restores workbench HTML (including CSP) from `workbench.*.bak-custom-css` when available.
 
 ---
 
@@ -126,11 +181,11 @@ If patching failed, close VS Code, run the installer **as Administrator**, then 
 
 | | Cursor | VS Code |
 |---|--------|---------|
-| Extensions | [Custom CSS and JS](https://marketplace.visualstudio.com/items?itemName=be5invis.vscode-custom-css) + [Fix Checksums Next](https://marketplace.visualstudio.com/items?itemName=RimuruChan.vscode-fix-checksums-next) | same |
+| Extensions | Optional helpers (auto-downloaded). Theme works via workbench patch alone. | same |
 | First patch | Run as Administrator if workbench patch fails | same |
 | Backup | `settings.json.bak-glass-theme` created automatically | same |
 
-Installers download extension VSIX files automatically — **do not use `-SkipExtensions`** unless extensions are already installed.
+Installers download helper VSIX files automatically when possible — **`-SkipExtensions`** skips that optional step.
 
 **VS Code troubleshooting**
 
@@ -151,12 +206,13 @@ Select-String -Path (Resolve-Path $wb) -Pattern "VSCODE-CUSTOM-CSS-START"
 If the line matches, **Enable Custom CSS and JS** is optional.
 **Кратко (RU):**
 
-- Расширение: только **be5invis.vscode-custom-css** (в Marketplace — *Custom CSS and JS Loader*). Другие «Custom CSS» от других авторов — удалить.
-- Полностью закройте VS Code → из папки репозитория:
-  - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme abyss`
-  - macOS: `chmod +x scripts/install-vscode.sh && ./scripts/install-vscode.sh abyss` (sudo, если патч не записывается)
-- Command Palette → **Enable Custom CSS and JS** → **Fix Checksums: Apply** → перезапуск.
-- После обновления VS Code — снова `install-vscode.ps1`.
+- Расширения **не обязательны**: установщик сам патчит `workbench.html`.
+- Полностью закройте Cursor → из папки репозитория (или через `bootstrap-windows.ps1`):
+  - Windows easy: `irm https://raw.githubusercontent.com/kittys1ck666/cursor-glass-themes/cursor/fix-installer-bugs-ccba/scripts/bootstrap-windows.ps1 | iex`
+  - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Theme abyss`
+  - macOS: `chmod +x scripts/install.sh && ./scripts/install.sh abyss`
+- Если Cursor ругается на integrity → **Fix Checksums: Apply** → перезапуск.
+- После обновления Cursor — снова запустить installer.
 
 
 Newer VS Code builds use a versioned install folder (`1b50d58d73\resources\app\...`). The installer auto-detects `electron-browser` and mirrors patches into `electron-sandbox`.
@@ -177,13 +233,13 @@ cursor-glass-themes/
 └── scripts/
     ├── install.ps1             # Cursor (Windows)
     ├── install.sh              # Cursor (macOS / Linux)
+    ├── uninstall.ps1           # Cursor (Windows)
+    ├── uninstall.sh            # Cursor (macOS / Linux)
     ├── install-vscode.ps1      # VS Code (Windows)
     ├── install-vscode.sh       # VS Code (macOS / Linux)
-    ├── uninstall.ps1           # Cursor
     ├── uninstall-vscode.ps1    # VS Code (Windows)
     └── uninstall-vscode.sh     # VS Code (macOS / Linux)
 ```
-
 **CSS load order:** `preset` → `glass-base` → `ide-agent` (Cursor only) → `ide-workbench` → `marble.js`
 
 ---
@@ -197,10 +253,16 @@ cursor-glass-themes/
 
 | Variable | Purpose |
 |----------|---------|
+| `--a-wb-surface` | Base surface hex for workbench colorCustomizations |
 | `--a-fg-bright` | Main text (`#111` on light themes) |
 | `--a-glass-input` | Input / code block opacity |
+| `--a-blur` / `--a-blur-chat` / `--a-blur-input` | Panel / chat / input blur radii |
+| `--a-selection-bg` | Text selection color |
+| `--a-btn-primary` / `--a-btn-primary-hover` | Submit button colors |
 | `--a-marble-c1`…`c5` | Marble gradient (RGB 0–1, comma-separated) |
 | `--a-theme-mode` | `dark` or `light` |
+
+Manual settings snippet (optional): see `settings/cursor-settings.snippet.json`.
 
 ---
 

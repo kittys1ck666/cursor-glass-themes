@@ -23,10 +23,18 @@ function Write-Warn($msg) { Write-Host "    $msg" -ForegroundColor Yellow }
 $RepoRoot     = Split-Path -Parent $PSScriptRoot
 $ManifestPath = Join-Path $RepoRoot "themes.json"
 $ThemeDir     = Join-Path $env:USERPROFILE ".vscode\glass-themes"
-$SettingsPath = Join-Path $env:APPDATA "Code\User\settings.json"
 $AppFolder    = if ($Insiders) { "Microsoft VS Code Insiders" } else { "Microsoft VS Code" }
+$SettingsPath = if ($Insiders) {
+    Join-Path $env:APPDATA "Code - Insiders\User\settings.json"
+} else {
+    Join-Path $env:APPDATA "Code\User\settings.json"
+}
 $ExtDir        = Join-Path $RepoRoot ".cache\extensions"
-$ExtRoot       = Join-Path $env:USERPROFILE ".vscode\extensions"
+$ExtRoot       = if ($Insiders) {
+    Join-Path $env:USERPROFILE ".vscode-insiders\extensions"
+} else {
+    Join-Path $env:USERPROFILE ".vscode\extensions"
+}
 $RequiredCssExtId = "be5invis.vscode-custom-css"
 
 function Get-CustomCssMirrorPaths {
@@ -230,6 +238,23 @@ function Get-WorkbenchColorCustomizations {
         'breadcrumb.background' = Alpha $h '00'
         'breadcrumbPicker.background' = $widgetBg
         'terminal.background' = Alpha $h '00'
+        'terminal.foreground' = if ($Mode -eq 'light') { '#1f1018' } else { '#e8eef8' }
+        'terminal.ansiBlack' = if ($Mode -eq 'light') { '#2a2a2a' } else { '#0b1220' }
+        'terminal.ansiRed' = '#ff6b7a'
+        'terminal.ansiGreen' = if ($Mode -eq 'light') { '#1a7f4b' } else { '#4ae878' }
+        'terminal.ansiYellow' = '#f0c674'
+        'terminal.ansiBlue' = if ($Mode -eq 'light') { '#2f6fed' } else { '#7ec8ff' }
+        'terminal.ansiMagenta' = '#c792ea'
+        'terminal.ansiCyan' = '#7fdbca'
+        'terminal.ansiWhite' = if ($Mode -eq 'light') { '#1f1018' } else { '#e8eef8' }
+        'terminal.ansiBrightBlack' = '#6b7a90'
+        'terminal.ansiBrightRed' = '#ff8a96'
+        'terminal.ansiBrightGreen' = '#7dffb0'
+        'terminal.ansiBrightYellow' = '#ffe08a'
+        'terminal.ansiBrightBlue' = '#a8dcff'
+        'terminal.ansiBrightMagenta' = '#e0b0ff'
+        'terminal.ansiBrightCyan' = '#a8fff0'
+        'terminal.ansiBrightWhite' = '#ffffff'
         'editorGroup.border' = Alpha $h '00'
         'editorGroupHeader.tabsBorder' = Alpha $h '00'
         'tab.border' = Alpha $h '00'
@@ -365,30 +390,36 @@ function Patch-Workbench {
         throw "workbench.html not found under $($vscodePaths.VsCodeDir)"
     }
 
-    $indicatorPath = Join-Path $ExtRoot "be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
+    $indicatorPath = Join-Path $RepoRoot "theme\patch-indicator.js"
+    if (-not (Test-Path $indicatorPath)) {
+        $indicatorPath = Join-Path $ExtRoot "be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
+    }
     if (-not (Test-Path $indicatorPath)) {
         $found = Get-ChildItem $ExtRoot -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) { $indicatorPath = Join-Path $found.FullName "src\statusbar.js" }
     }
     if (-not (Test-Path $indicatorPath)) {
-        throw "statusbar.js not found. Install 'Custom CSS and JS' extension first (re-run without -SkipExtensions)."
+        Write-Warn "No patch indicator found - continuing with empty indicator (theme CSS/JS still inject)."
+        $indicator = "/* glass themes */"
+    } else {
+        $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
     }
 
-    $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
     $html = Get-PristineWorkbenchHtml -Paths $templatePaths
     $html = Strip-WorkbenchCsp $html
 
     $id = [guid]::NewGuid().ToString()
-    $inject = @"
-<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID $id !! -->
-<!-- !! VSCODE-CUSTOM-CSS-START !! -->
-<script>$indicator</script>
-<style>$CombinedCss</style>
-<script>$JsContent</script>
-<!-- !! VSCODE-CUSTOM-CSS-END !! -->
-
-"@
-    $html = $html -replace '</html>', "$inject</html>"
+    $inject = '<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID ' + $id + ' !! -->' + [Environment]::NewLine +
+        '<!-- !! VSCODE-CUSTOM-CSS-START !! -->' + [Environment]::NewLine +
+        '<script>' + $indicator + '</script>' + [Environment]::NewLine +
+        '<style>' + $CombinedCss + '</style>' + [Environment]::NewLine +
+        '<script>' + $JsContent + '</script>' + [Environment]::NewLine +
+        '<!-- !! VSCODE-CUSTOM-CSS-END !! -->' + [Environment]::NewLine
+    if ($html -match '</html>') {
+        $html = $html.Replace('</html>', ($inject + '</html>'))
+    } else {
+        $html = $html + $inject
+    }
 
     $patchedPaths = @()
     foreach ($target in ($CustomCssWorkbenchPaths | Select-Object -Unique)) {
@@ -399,7 +430,7 @@ function Patch-Workbench {
         }
         [System.IO.File]::WriteAllText($target, $html, [System.Text.UTF8Encoding]::new($false))
         $patchedPaths += $target
-        Write-Ok "Patched $target"
+        Write-Ok ("Patched " + $target)
     }
 
     $productKeys = Update-AllWorkbenchChecksums -ProductJsonPath $ProductJson -WorkbenchHtmlPaths $patchedPaths
@@ -407,12 +438,10 @@ function Patch-Workbench {
 }
 
 $label = if ($Insiders) { "VS Code Insiders" } else { "VS Code" }
-Write-Host @"
-
-  Glass Themes — $label Installer
-  Workbench glass + WebGL marble (8 presets)
-
-"@ -ForegroundColor White
+Write-Host ""
+Write-Host ("  Glass Themes - {0} Installer" -f $label) -ForegroundColor White
+Write-Host "  Workbench glass + WebGL marble (8 presets)" -ForegroundColor White
+Write-Host ""
 
 if (-not (Test-Path $ManifestPath)) { throw "themes.json not found at $ManifestPath" }
 $Manifest = Get-Content $ManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json

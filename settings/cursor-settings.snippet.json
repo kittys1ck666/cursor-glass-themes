@@ -5,6 +5,7 @@
     "file:///REPLACE/presets/abyss.css",
     "file:///REPLACE/glass-base.css",
     "file:///REPLACE/ide-agent.css",
+    "file:///REPLACE/ide-workbench.css",
     "file:///REPLACE/marble.js"
   ],
   "vscode_custom_css.statusbar": true
