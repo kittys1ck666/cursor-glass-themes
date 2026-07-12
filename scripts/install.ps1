@@ -184,7 +184,7 @@ function Merge-Settings {
 function Install-ExtensionVsix {
     param([string]$Url, [string]$OutName)
     if (-not (Test-Path $CursorExe)) {
-        Write-Warn "Cursor.exe not found — skip extension $OutName (theme still works via workbench patch)"
+        Write-Warn "Cursor.exe not found - skip extension $OutName (theme still works via workbench patch)"
         return
     }
     New-Item -ItemType Directory -Force -Path $ExtDir | Out-Null
@@ -270,16 +270,18 @@ function Patch-Workbench {
     $html = $html -replace '(?s)<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?/>', ''
 
     $id = [guid]::NewGuid().ToString()
-    $inject = @"
-<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID $id !! -->
-<!-- !! VSCODE-CUSTOM-CSS-START !! -->
-<script>$indicator</script>
-<style>$CombinedCss</style>
-<script>$JsContent</script>
-<!-- !! VSCODE-CUSTOM-CSS-END !! -->
-
-"@
-    $html = $html -replace '</html>', "$inject</html>"
+    # Build with concatenation so CSS/JS '$' and quotes never break PowerShell parsing
+    $inject = '<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID ' + $id + ' !! -->' + [Environment]::NewLine +
+        '<!-- !! VSCODE-CUSTOM-CSS-START !! -->' + [Environment]::NewLine +
+        '<script>' + $indicator + '</script>' + [Environment]::NewLine +
+        '<style>' + $CombinedCss + '</style>' + [Environment]::NewLine +
+        '<script>' + $JsContent + '</script>' + [Environment]::NewLine +
+        '<!-- !! VSCODE-CUSTOM-CSS-END !! -->' + [Environment]::NewLine
+    if ($html -match '</html>') {
+        $html = $html.Replace('</html>', ($inject + '</html>'))
+    } else {
+        $html = $html + $inject
+    }
 
     foreach ($target in ($CustomCssWorkbenchPaths | Select-Object -Unique)) {
         if (-not $target) { continue }
@@ -288,7 +290,7 @@ function Patch-Workbench {
             New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
         }
         [System.IO.File]::WriteAllText($target, $html, [System.Text.UTF8Encoding]::new($false))
-        Write-Ok "Patched $target"
+        Write-Ok ("Patched " + $target)
 
         $hash = [Convert]::ToBase64String(
             [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($target))
@@ -297,10 +299,10 @@ function Patch-Workbench {
         $key = if ($rel -match '^out/(.+)$') { $matches[1] } else { $rel }
         $product = Get-Content $ProductJson -Raw -Encoding UTF8
         $escapedKey = [regex]::Escape($key)
-        if ($product -match "`"$escapedKey`":\s*`"[^`"]+`"") {
-            $product = $product -replace "`"$escapedKey`":\s*`"[^`"]+`"", "`"$key`": `"$hash`""
+        if ($product -match ('"' + $escapedKey + '"\s*:\s*"[^"]+"')) {
+            $product = [regex]::Replace($product, ('"' + $escapedKey + '"\s*:\s*"[^"]+"'), ('"' + $key + '": "' + $hash + '"'))
         } else {
-            $product = $product -replace '("checksums"\s*:\s*\{)', "`$1`n`t`t`"$key`": `"$hash`","
+            $product = [regex]::Replace($product, '("checksums"\s*:\s*\{)', ('$1' + "`n`t`t`"$key`": `"$hash`","), 1)
         }
         [System.IO.File]::WriteAllText($ProductJson, $product, [System.Text.UTF8Encoding]::new($false))
     }
@@ -411,17 +413,17 @@ Write-Host "  Done! Theme: $($entry.name)" -ForegroundColor Green
 Write-Host ""
 if ($patched) {
     Write-Host "  Next steps (only these):" -ForegroundColor Green
-    Write-Host "    1. Fully quit Cursor (File → Exit)" -ForegroundColor Green
+    Write-Host "    1. Fully quit Cursor (File -> Exit)" -ForegroundColor Green
     Write-Host "    2. Start Cursor again" -ForegroundColor Green
     Write-Host ""
-    Write-Host "  No 'Enable Custom CSS' needed — workbench is already patched." -ForegroundColor DarkGreen
+    Write-Host "  No 'Enable Custom CSS' needed - workbench is already patched." -ForegroundColor DarkGreen
     Write-Host "  If Cursor warns about installation integrity:" -ForegroundColor DarkYellow
-    Write-Host "    Ctrl+Shift+P → Fix Checksums: Apply → restart once more" -ForegroundColor DarkYellow
+    Write-Host "    Ctrl+Shift+P -> Fix Checksums: Apply -> restart once more" -ForegroundColor DarkYellow
 } else {
     Write-Host "  Patch incomplete. Close Cursor, run PowerShell as Administrator, then:" -ForegroundColor Yellow
-    Write-Host "    powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Theme $($entry.id)" -ForegroundColor Yellow
+    Write-Host ("    powershell -ExecutionPolicy Bypass -File `"{0}`" -Theme {1}" -f $PSCommandPath, $entry.id) -ForegroundColor Yellow
 }
 Write-Host ""
 Write-Host "  Switch theme later:" -ForegroundColor Green
-Write-Host "    powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Theme sakura" -ForegroundColor Green
+Write-Host ("    powershell -ExecutionPolicy Bypass -File `"{0}`" -Theme sakura" -f $PSCommandPath) -ForegroundColor Green
 Write-Host ""

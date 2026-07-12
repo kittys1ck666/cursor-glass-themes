@@ -399,7 +399,7 @@ function Patch-Workbench {
         if ($found) { $indicatorPath = Join-Path $found.FullName "src\statusbar.js" }
     }
     if (-not (Test-Path $indicatorPath)) {
-        Write-Warn "No patch indicator found — continuing with empty indicator (theme CSS/JS still inject)."
+        Write-Warn "No patch indicator found - continuing with empty indicator (theme CSS/JS still inject)."
         $indicator = "/* glass themes */"
     } else {
         $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
@@ -409,16 +409,17 @@ function Patch-Workbench {
     $html = Strip-WorkbenchCsp $html
 
     $id = [guid]::NewGuid().ToString()
-    $inject = @"
-<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID $id !! -->
-<!-- !! VSCODE-CUSTOM-CSS-START !! -->
-<script>$indicator</script>
-<style>$CombinedCss</style>
-<script>$JsContent</script>
-<!-- !! VSCODE-CUSTOM-CSS-END !! -->
-
-"@
-    $html = $html -replace '</html>', "$inject</html>"
+    $inject = '<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID ' + $id + ' !! -->' + [Environment]::NewLine +
+        '<!-- !! VSCODE-CUSTOM-CSS-START !! -->' + [Environment]::NewLine +
+        '<script>' + $indicator + '</script>' + [Environment]::NewLine +
+        '<style>' + $CombinedCss + '</style>' + [Environment]::NewLine +
+        '<script>' + $JsContent + '</script>' + [Environment]::NewLine +
+        '<!-- !! VSCODE-CUSTOM-CSS-END !! -->' + [Environment]::NewLine
+    if ($html -match '</html>') {
+        $html = $html.Replace('</html>', ($inject + '</html>'))
+    } else {
+        $html = $html + $inject
+    }
 
     $patchedPaths = @()
     foreach ($target in ($CustomCssWorkbenchPaths | Select-Object -Unique)) {
@@ -429,7 +430,7 @@ function Patch-Workbench {
         }
         [System.IO.File]::WriteAllText($target, $html, [System.Text.UTF8Encoding]::new($false))
         $patchedPaths += $target
-        Write-Ok "Patched $target"
+        Write-Ok ("Patched " + $target)
     }
 
     $productKeys = Update-AllWorkbenchChecksums -ProductJsonPath $ProductJson -WorkbenchHtmlPaths $patchedPaths
@@ -437,12 +438,10 @@ function Patch-Workbench {
 }
 
 $label = if ($Insiders) { "VS Code Insiders" } else { "VS Code" }
-Write-Host @"
-
-  Glass Themes — $label Installer
-  Workbench glass + WebGL marble (8 presets)
-
-"@ -ForegroundColor White
+Write-Host ""
+Write-Host ("  Glass Themes - {0} Installer" -f $label) -ForegroundColor White
+Write-Host "  Workbench glass + WebGL marble (8 presets)" -ForegroundColor White
+Write-Host ""
 
 if (-not (Test-Path $ManifestPath)) { throw "themes.json not found at $ManifestPath" }
 $Manifest = Get-Content $ManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
