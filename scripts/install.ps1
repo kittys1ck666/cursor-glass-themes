@@ -183,23 +183,49 @@ function Merge-Settings {
 
 function Install-ExtensionVsix {
     param([string]$Url, [string]$OutName)
-    if (-not (Test-Path $CursorExe)) { throw "Cursor not found at $CursorExe" }
+    if (-not (Test-Path $CursorExe)) {
+        Write-Warn "Cursor.exe not found — skip extension $OutName (theme still works via workbench patch)"
+        return
+    }
     New-Item -ItemType Directory -Force -Path $ExtDir | Out-Null
     $out = Join-Path $ExtDir $OutName
     if (-not (Test-Path $out)) {
         Write-Host "    Downloading $OutName ..."
         Invoke-WebRequest -Uri $Url -OutFile $out -UseBasicParsing
     }
+    # Prefer CLI if present
+    $cli = Join-Path (Split-Path $CursorExe -Parent) "resources\app\bin\cursor.cmd"
+    if (-not (Test-Path $cli)) { $cli = $CursorExe }
     $prevEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $CursorExe --install-extension $out 2>$null | Out-Null
+    $outText = & $cli --install-extension $out --force 2>&1 | Out-String
     $exit = $LASTEXITCODE
     $ErrorActionPreference = $prevEap
-    if ($exit -ne 0) {
-        Write-Warn "Extension install may have failed for $OutName. Install manually: $out"
-    } else {
+    if ($outText -match 'successfully installed|already installed|is already installed') {
         Write-Ok "Installed $OutName"
+    } elseif ($exit -ne 0) {
+        Write-Warn "Could not auto-install $OutName (optional). Theme still works via workbench patch."
+    } else {
+        Write-Ok "Extension present: $OutName"
     }
+}
+
+function Get-PatchIndicator {
+    $bundled = Join-Path $RepoRoot "theme\patch-indicator.js"
+    if (Test-Path $bundled) { return (Get-Content $bundled -Raw -Encoding UTF8) }
+    # Fallback: extension statusbar if user already has Custom CSS
+    $found = Get-ChildItem (Join-Path $env:USERPROFILE ".cursor\extensions") -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($found) {
+        $p = Join-Path $found.FullName "src\statusbar.js"
+        if (Test-Path $p) { return (Get-Content $p -Raw -Encoding UTF8) }
+    }
+    return "/* glass themes indicator unavailable */"
+}
+
+function Test-WorkbenchPatched {
+    param([string]$Path)
+    return (Test-Path $Path) -and ((Get-Content $Path -Raw -Encoding UTF8) -match 'VSCODE-CUSTOM-CSS-START')
 }
 
 function Patch-Workbench {
@@ -210,17 +236,7 @@ function Patch-Workbench {
         throw "workbench.html not found under $VsCodeDir"
     }
 
-    $indicatorPath = Join-Path $env:USERPROFILE ".cursor\extensions\be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
-    if (-not (Test-Path $indicatorPath)) {
-        $found = Get-ChildItem (Join-Path $env:USERPROFILE ".cursor\extensions") -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($found) { $indicatorPath = Join-Path $found.FullName "src\statusbar.js" }
-    }
-    if (-not (Test-Path $indicatorPath)) {
-        Write-Warn "statusbar.js not found - run Enable Custom CSS and JS in Cursor after restart."
-        return
-    }
-
-    $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
+    $indicator = Get-PatchIndicator
 
     # Prefer pristine backup when available
     $html = $null
@@ -288,7 +304,7 @@ function Patch-Workbench {
         }
         [System.IO.File]::WriteAllText($ProductJson, $product, [System.Text.UTF8Encoding]::new($false))
     }
-    Write-Ok "Patched workbench mirrors + checksums (CSP stripped)"
+    Write-Ok "Patched workbench mirrors + checksums (no extension required)"
 }
 
 Write-Host @"
@@ -309,6 +325,7 @@ $BaseSrc    = Join-Path $RepoRoot "theme\glass-base.css"
 $IdeSrc     = Join-Path $RepoRoot "theme\ide-agent.css"
 $WbSrc      = Join-Path $RepoRoot "theme\ide-workbench.css"
 $MarbleSrc  = Join-Path $RepoRoot "theme\marble.js"
+$IndicatorSrc = Join-Path $RepoRoot "theme\patch-indicator.js"
 
 if (-not (Test-Path $PresetSrc)) { throw "Preset not found: $PresetSrc" }
 
@@ -322,6 +339,7 @@ Copy-Item $BaseSrc (Join-Path $ThemeDir "glass-base.css") -Force
 Copy-Item $IdeSrc (Join-Path $ThemeDir "ide-agent.css") -Force
 Copy-Item $WbSrc (Join-Path $ThemeDir "ide-workbench.css") -Force
 Copy-Item $MarbleSrc (Join-Path $ThemeDir "marble.js") -Force
+if (Test-Path $IndicatorSrc) { Copy-Item $IndicatorSrc (Join-Path $ThemeDir "patch-indicator.js") -Force }
 Get-ChildItem (Join-Path $RepoRoot "theme\presets\*.css") | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $ThemeDir "presets\$($_.Name)") -Force
 }
@@ -366,8 +384,20 @@ if ($entry.mode -eq "light") {
 Merge-Settings $settingsPatch
 Write-Ok "settings.json updated (Cursor theme: $($entry.cursorTheme))"
 
+$patched = $false
+if (-not $SkipWorkbenchPatch) {
+    Write-Step "Patching Cursor workbench (no extensions required)"
+    try {
+        Patch-Workbench -CombinedCss $combined -JsContent (Get-Content $JsPath -Raw -Encoding UTF8)
+        $patched = (Test-WorkbenchPatched -Path $WorkbenchHtml)
+    } catch {
+        Write-Warn $_.Exception.Message
+        Write-Warn "Close Cursor completely and re-run this installer as Administrator."
+    }
+}
+
 if (-not $SkipExtensions) {
-    Write-Step "Installing required extensions"
+    Write-Step "Auto-installing optional helper extensions"
     Install-ExtensionVsix `
         -Url "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/be5invis/vsextensions/vscode-custom-css/7.4.0/vspackage" `
         -OutName "vscode-custom-css-7.4.0.vsix"
@@ -376,29 +406,22 @@ if (-not $SkipExtensions) {
         -OutName "vscode-fix-checksums-next-1.4.0.vsix"
 }
 
-if (-not $SkipWorkbenchPatch) {
-    Write-Step "Patching Cursor workbench"
-    try {
-        Patch-Workbench -CombinedCss $combined -JsContent (Get-Content $JsPath -Raw -Encoding UTF8)
-    } catch {
-        Write-Warn $_.Exception.Message
-        Write-Warn "Run Cursor as Administrator, then: Enable Custom CSS and JS -> Fix Checksums: Apply"
-    }
+Write-Host ""
+Write-Host "  Done! Theme: $($entry.name)" -ForegroundColor Green
+Write-Host ""
+if ($patched) {
+    Write-Host "  Next steps (only these):" -ForegroundColor Green
+    Write-Host "    1. Fully quit Cursor (File → Exit)" -ForegroundColor Green
+    Write-Host "    2. Start Cursor again" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  No 'Enable Custom CSS' needed — workbench is already patched." -ForegroundColor DarkGreen
+    Write-Host "  If Cursor warns about installation integrity:" -ForegroundColor DarkYellow
+    Write-Host "    Ctrl+Shift+P → Fix Checksums: Apply → restart once more" -ForegroundColor DarkYellow
+} else {
+    Write-Host "  Patch incomplete. Close Cursor, run PowerShell as Administrator, then:" -ForegroundColor Yellow
+    Write-Host "    powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Theme $($entry.id)" -ForegroundColor Yellow
 }
-
-Write-Host @"
-
-  Done! Theme: $($entry.name)
-
-  Next steps:
-    1. Fully quit and restart Cursor
-    2. Open the Agents window (glass layout)
-    3. Command Palette if needed: Enable Custom CSS and JS -> Fix Checksums: Apply
-    4. Restart again
-
-  Switch theme later:
-    powershell -ExecutionPolicy Bypass -File "$($MyInvocation.MyCommand.Path)" -Theme $($entry.id)
-
-  After Cursor updates, re-run the same command with your theme id.
-
-"@ -ForegroundColor Green
+Write-Host ""
+Write-Host "  Switch theme later:" -ForegroundColor Green
+Write-Host "    powershell -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Theme sakura" -ForegroundColor Green
+Write-Host ""

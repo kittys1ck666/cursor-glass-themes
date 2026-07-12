@@ -129,6 +129,7 @@ cp "$REPO_ROOT/theme/glass-base.css" "$THEME_DIR/glass-base.css"
 cp "$REPO_ROOT/theme/ide-agent.css" "$THEME_DIR/ide-agent.css"
 cp "$REPO_ROOT/theme/ide-workbench.css" "$THEME_DIR/ide-workbench.css"
 cp "$REPO_ROOT/theme/marble.js" "$THEME_DIR/marble.js"
+cp "$REPO_ROOT/theme/patch-indicator.js" "$THEME_DIR/patch-indicator.js"
 cp "$REPO_ROOT"/theme/presets/*.css "$THEME_DIR/presets/"
 printf '%s\n' "{\"id\":\"$THEME_ID\",\"name\":\"$THEME_NAME\",\"mode\":\"$THEME_MODE\"}" > "$THEME_DIR/active-theme.json"
 
@@ -280,7 +281,8 @@ if [[ -n "${PRODUCT_JSON:-}" && -f "$PRODUCT_JSON" ]]; then
     RUNNER=()
   fi
   if [[ ${#RUNNER[@]} -gt 0 ]]; then
-  if ! "${RUNNER[@]}" - "$PRODUCT_JSON" "$BUNDLE_PATH" "$JS_PATH" "$HOME" "$MIRROR_PATHS_JSON" <<'PY'
+  INDICATOR_PATH="$REPO_ROOT/theme/patch-indicator.js"
+  if ! "${RUNNER[@]}" - "$PRODUCT_JSON" "$BUNDLE_PATH" "$JS_PATH" "$HOME" "$MIRROR_PATHS_JSON" "$INDICATOR_PATH" <<'PY'
 import base64, glob, hashlib, json, pathlib, re, sys, uuid
 
 product_path = pathlib.Path(sys.argv[1])
@@ -288,13 +290,14 @@ css_path = pathlib.Path(sys.argv[2])
 js_path = pathlib.Path(sys.argv[3])
 home = pathlib.Path(sys.argv[4])
 mirror_paths = [pathlib.Path(p) for p in json.loads(sys.argv[5]) if p]
+indicator_path = pathlib.Path(sys.argv[6]) if len(sys.argv) > 6 else None
 
-exts = sorted(glob.glob(str(home / ".cursor/extensions/be5invis.vscode-custom-css-*/src/statusbar.js")))
-if not exts:
-    print("    statusbar.js not found — run Enable Custom CSS and JS in Cursor after restart")
-    raise SystemExit(0)
+if indicator_path and indicator_path.is_file():
+    indicator = indicator_path.read_text(encoding="utf-8")
+else:
+    exts = sorted(glob.glob(str(home / ".cursor/extensions/be5invis.vscode-custom-css-*/src/statusbar.js")))
+    indicator = pathlib.Path(exts[0]).read_text(encoding="utf-8") if exts else "/* glass indicator */"
 
-indicator = pathlib.Path(exts[0]).read_text(encoding="utf-8")
 css = css_path.read_text(encoding="utf-8")
 js = js_path.read_text(encoding="utf-8")
 patch_re = re.compile(r"<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*")
@@ -354,6 +357,7 @@ for wb_path in patched:
     keys.append(key)
 product_path.write_text(product, encoding="utf-8")
 print(f"    Updated product.json checksums ({', '.join(dict.fromkeys(keys))})")
+print("    No extension required for glass theme")
 PY
   then
     echo "    Warning: workbench patch failed. Close Cursor and re-run (sudo may be required)."
@@ -368,9 +372,11 @@ cat <<EOF
   Done! Theme: $THEME_NAME
 
   Next steps:
-    1. Fully quit and restart Cursor
-    2. Command Palette → Fix Checksums: Apply (if prompted)
-    3. Restart again
+    1. Fully quit Cursor
+    2. Start Cursor again
+
+  No "Enable Custom CSS" needed — workbench is patched directly.
+  If Cursor warns about integrity: Command Palette → Fix Checksums: Apply → restart.
 
   Switch theme: ./scripts/install.sh sakura
   Uninstall: ./scripts/uninstall.sh

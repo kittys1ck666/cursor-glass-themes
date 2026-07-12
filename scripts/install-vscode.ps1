@@ -390,16 +390,21 @@ function Patch-Workbench {
         throw "workbench.html not found under $($vscodePaths.VsCodeDir)"
     }
 
-    $indicatorPath = Join-Path $ExtRoot "be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
+    $indicatorPath = Join-Path $RepoRoot "theme\patch-indicator.js"
+    if (-not (Test-Path $indicatorPath)) {
+        $indicatorPath = Join-Path $ExtRoot "be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
+    }
     if (-not (Test-Path $indicatorPath)) {
         $found = Get-ChildItem $ExtRoot -Filter "be5invis.vscode-custom-css-*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) { $indicatorPath = Join-Path $found.FullName "src\statusbar.js" }
     }
     if (-not (Test-Path $indicatorPath)) {
-        throw "statusbar.js not found. Install 'Custom CSS and JS' extension first (re-run without -SkipExtensions)."
+        Write-Warn "No patch indicator found — continuing with empty indicator (theme CSS/JS still inject)."
+        $indicator = "/* glass themes */"
+    } else {
+        $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
     }
 
-    $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
     $html = Get-PristineWorkbenchHtml -Paths $templatePaths
     $html = Strip-WorkbenchCsp $html
 

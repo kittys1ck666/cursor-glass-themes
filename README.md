@@ -31,9 +31,30 @@ Light presets (`sakura`, `porcelain`) use **dark text** for readability on pale 
 
 ---
 
+## Install — Cursor (Windows, easy — no git)
+
+Open **PowerShell** and paste:
+
+```powershell
+irm https://raw.githubusercontent.com/kittys1ck666/cursor-glass-themes/cursor/fix-installer-bugs-ccba/scripts/bootstrap-windows.ps1 | iex
+```
+
+Or pick a theme:
+
+```powershell
+$u='https://raw.githubusercontent.com/kittys1ck666/cursor-glass-themes/cursor/fix-installer-bugs-ccba/scripts/bootstrap-windows.ps1'
+iwr $u -OutFile $env:TEMP\glass-boot.ps1
+powershell -ExecutionPolicy Bypass -File $env:TEMP\glass-boot.ps1 -Theme sakura
+```
+
+Then: **fully quit Cursor → start again**.  
+No “Enable Custom CSS” step — the installer patches workbench directly (extensions are optional helpers and download automatically).
+
+---
+
 ## Install — Cursor
 
-### Windows
+### Windows (from folder)
 
 ```powershell
 git clone https://github.com/kittys1ck666/cursor-glass-themes.git
@@ -58,9 +79,11 @@ chmod +x scripts/install.sh scripts/uninstall.sh
 **After install**
 
 1. Fully quit Cursor  
-2. Command Palette → **Enable Custom CSS and JS**  
-3. Command Palette → **Fix Checksums: Apply**  
-4. Restart Cursor  
+2. Start Cursor again  
+
+If Cursor warns about installation integrity: Command Palette → **Fix Checksums: Apply** → restart once.
+
+You do **not** need **Enable Custom CSS and JS** when the installer reports a successful workbench patch.
 
 **Installed to:** `~/.cursor/cursor-abyss-glass/`
 
@@ -80,7 +103,8 @@ Uninstall restores `settings.json` from `settings.json.bak-glass-theme` when ava
 | Symptom | Fix |
 |---------|-----|
 | Theme plain / no marble | Fully quit Cursor → Fix Checksums: Apply → restart. Re-run installer after Cursor updates. |
-| `cursor` CLI missing (Linux) | Install CLI or open Cursor and install the two required extensions manually, then re-run installer. |
+| No “Enable Custom CSS” command | Normal — not required. Theme is injected into workbench.html. |
+| `cursor` CLI missing (Linux) | Theme still patches workbench; optional helper extensions can be skipped. |
 | Patch fails on `/usr/share/cursor` | Installer uses `sudo` for the patch step only. Close Cursor first. |
 | Agents OK, IDE agent sidebar plain | Re-run installer (current CSS keeps markdown tables / AI glass surfaces in IDE). |
 | Debug marble attach | In `theme/marble.js` set `DEBUG = true` and/or `SHOW_HUD = true`, reinstall. |
@@ -157,11 +181,11 @@ Uninstall restores `settings.json` from backup when present, and restores workbe
 
 | | Cursor | VS Code |
 |---|--------|---------|
-| Extensions | [Custom CSS and JS](https://marketplace.visualstudio.com/items?itemName=be5invis.vscode-custom-css) + [Fix Checksums Next](https://marketplace.visualstudio.com/items?itemName=RimuruChan.vscode-fix-checksums-next) | same |
+| Extensions | Optional helpers (auto-downloaded). Theme works via workbench patch alone. | same |
 | First patch | Run as Administrator if workbench patch fails | same |
 | Backup | `settings.json.bak-glass-theme` created automatically | same |
 
-Installers download extension VSIX files automatically — **do not use `-SkipExtensions`** unless extensions are already installed.
+Installers download helper VSIX files automatically when possible — **`-SkipExtensions`** skips that optional step.
 
 **VS Code troubleshooting**
 
@@ -182,12 +206,13 @@ Select-String -Path (Resolve-Path $wb) -Pattern "VSCODE-CUSTOM-CSS-START"
 If the line matches, **Enable Custom CSS and JS** is optional.
 **Кратко (RU):**
 
-- Расширение: только **be5invis.vscode-custom-css** (в Marketplace — *Custom CSS and JS Loader*). Другие «Custom CSS» от других авторов — удалить.
-- Полностью закройте VS Code → из папки репозитория:
-  - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\install-vscode.ps1 -Theme abyss`
-  - macOS: `chmod +x scripts/install-vscode.sh && ./scripts/install-vscode.sh abyss` (sudo, если патч не записывается)
-- Command Palette → **Enable Custom CSS and JS** → **Fix Checksums: Apply** → перезапуск.
-- После обновления VS Code — снова `install-vscode.ps1`.
+- Расширения **не обязательны**: установщик сам патчит `workbench.html`.
+- Полностью закройте Cursor → из папки репозитория (или через `bootstrap-windows.ps1`):
+  - Windows easy: `irm https://raw.githubusercontent.com/kittys1ck666/cursor-glass-themes/cursor/fix-installer-bugs-ccba/scripts/bootstrap-windows.ps1 | iex`
+  - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Theme abyss`
+  - macOS: `chmod +x scripts/install.sh && ./scripts/install.sh abyss`
+- Если Cursor ругается на integrity → **Fix Checksums: Apply** → перезапуск.
+- После обновления Cursor — снова запустить installer.
 
 
 Newer VS Code builds use a versioned install folder (`1b50d58d73\resources\app\...`). The installer auto-detects `electron-browser` and mirrors patches into `electron-sandbox`.
