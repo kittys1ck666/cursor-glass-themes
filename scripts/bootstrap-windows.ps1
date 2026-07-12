@@ -57,6 +57,11 @@ if (-not (Test-Path $installer)) { throw "install.ps1 not found in ZIP" }
 
 Write-Step "Running installer (theme: $Theme)"
 & powershell -ExecutionPolicy Bypass -File $installer -Theme $Theme
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "  Installer failed (exit $LASTEXITCODE). See errors above." -ForegroundColor Red
+    exit $LASTEXITCODE
+}
 
 Write-Host ""
 Write-Host "  Easy install finished." -ForegroundColor Green
