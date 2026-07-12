@@ -1,7 +1,13 @@
 /* Glass marble — theme colors from CSS vars (--a-marble-c1 … c5) */
 (function () {
   "use strict";
-  console.log("[glass-marble] loading");
+
+  var DEBUG = false;
+  function log() {
+    if (!DEBUG || !console || !console.log) return;
+    console.log.apply(console, ["[glass-marble]"].concat([].slice.call(arguments)));
+  }
+  log("loading");
 
   var HOST_ORDER = [
     "[data-component='root']",
@@ -96,20 +102,28 @@
     ideDiagAt = now;
     var bar = findAuxBar();
     if (!bar) {
-      console.log("[glass-marble] ide:", reason, "— auxiliary bar not in DOM");
+      log("ide:", reason, "— auxiliary bar not in DOM");
       return;
     }
     var br = bar.getBoundingClientRect();
     var content = bar.querySelector(".content");
     var cd = hostDims(content, br);
     var host = findIdeHost();
-    console.log(
-      "[glass-marble] ide:",
+    log(
+      "ide:",
       reason,
       "bar=" + Math.round(br.width) + "x" + Math.round(br.height),
       "content=" + Math.round(cd.w) + "x" + Math.round(cd.h),
       "host=" + (host ? host.className.split(" ").slice(0, 3).join(".") : "none")
     );
+  }
+
+  function prefersReducedMotion() {
+    try {
+      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    } catch (e) {
+      return false;
+    }
   }
 
   function updateHud() {
@@ -400,7 +414,7 @@
     globalRenderer = createRenderer(canvas, fakeHost);
     if (globalRenderer && !globalRenderer._logged) {
       globalRenderer._logged = true;
-      console.log("[glass-marble] ready");
+      log("ready");
     }
     return globalRenderer;
   }
@@ -427,7 +441,7 @@
       if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
       panelHost = null;
       panelTrackBar = null;
-      console.log("[glass-marble] panel: webgl failed on", el.className.split(" ").slice(0, 3).join("."));
+      log("panel: webgl failed on", el.className.split(" ").slice(0, 3).join("."));
       return false;
     }
 
@@ -451,7 +465,7 @@
       }
     } catch (e) {}
 
-    console.log("[glass-marble] panel:", el.className.split(" ").slice(0, 3).join(" "), Math.round(d.w) + "x" + Math.round(d.h));
+    log("panel:", el.className.split(" ").slice(0, 3).join(" "), Math.round(d.w) + "x" + Math.round(d.h));
     return true;
   }
 
@@ -522,6 +536,19 @@
     tryAttachPanel();
 
     if (!globalRenderer && !panelRenderer) return;
+
+    var reduced = prefersReducedMotion();
+    if (reduced) {
+      var tStatic = 0;
+      if (panelRenderer) panelRenderer.draw(tStatic, scroll);
+      if (globalRenderer && (!panelRenderer || !isGlassMode())) {
+        globalRenderer.draw(tStatic, scroll);
+      }
+      document.body.classList.add("abyss-gpu");
+      updateHud();
+      log("reduced-motion: static frame only");
+      return;
+    }
 
     if (!boot.looping) {
       boot.looping = true;

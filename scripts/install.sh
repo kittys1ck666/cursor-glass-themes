@@ -40,12 +40,20 @@ read_theme() {
   python3 - "$MANIFEST" "$THEME_ID" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
-t = next(x for x in data["themes"] if x["id"] == sys.argv[2])
+try:
+    t = next(x for x in data["themes"] if x["id"] == sys.argv[2])
+except StopIteration:
+    ids = ", ".join(x["id"] for x in data["themes"])
+    raise SystemExit(f"Unknown theme '{sys.argv[2]}'. Available: {ids}")
 print(t["preset"]); print(t["cursorTheme"]); print(t["mode"]); print(t["name"])
 PY
 }
 
 mapfile -t META < <(read_theme)
+if [[ ${#META[@]} -lt 4 ]]; then
+  echo "Failed to resolve theme '$THEME_ID'" >&2
+  exit 1
+fi
 PRESET_REL="${META[0]}"
 CURSOR_THEME="${META[1]}"
 THEME_MODE="${META[2]}"
@@ -103,6 +111,9 @@ cat "$PRESET_PATH" "$BASE_PATH" "$IDE_PATH" "$WB_PATH" > "$BUNDLE_PATH"
 
 echo "==> Updating settings.json"
 mkdir -p "$(dirname "$SETTINGS_PATH")"
+if [[ -f "$SETTINGS_PATH" ]]; then
+  cp "$SETTINGS_PATH" "$SETTINGS_PATH.bak-glass-theme"
+fi
 python3 - "$SETTINGS_PATH" "$(to_file_url "$PRESET_PATH")" "$(to_file_url "$BASE_PATH")" "$(to_file_url "$IDE_PATH")" "$(to_file_url "$WB_PATH")" "$(to_file_url "$JS_PATH")" "$CURSOR_THEME" "$THEME_MODE" "$PRESET_PATH" <<'PY'
 import json, pathlib, re, sys
 path, preset_url, base, ide, wb, js, cursor_theme, mode, preset_path = sys.argv[1:10]
@@ -218,7 +229,7 @@ sid = str(uuid.uuid4())
 inject = f"<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID {sid} !! -->\n<!-- !! VSCODE-CUSTOM-CSS-START !! -->\n<script>{indicator}</script>\n<style>{css}</style>\n<script>{js}</script>\n<!-- !! VSCODE-CUSTOM-CSS-END !! -->\n"
 html = html.replace("</html>", inject + "</html>")
 pathlib.Path(html_path).write_text(html, encoding="utf-8")
-digest = base64.b64encode(hashlib.sha256(html.encode("utf-8")).digest()).decode().rstrip("=")
+digest = base64.b64encode(hashlib.sha256(pathlib.Path(html_path).read_bytes()).digest()).decode().rstrip("=")
 product = pathlib.Path(product_path).read_text(encoding="utf-8")
 product = re.sub(r'"vs/code/electron-sandbox/workbench/workbench.html":\s*"[^"]+"', f'"vs/code/electron-sandbox/workbench/workbench.html": "{digest}"', product)
 pathlib.Path(product_path).write_text(product, encoding="utf-8")
@@ -231,5 +242,6 @@ cat <<EOF
   Done! Theme: $THEME_NAME
 
   Restart Cursor. Switch theme: ./scripts/install.sh sakura
+  Uninstall: ./scripts/uninstall.sh
 
 EOF

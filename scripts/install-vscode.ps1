@@ -23,10 +23,18 @@ function Write-Warn($msg) { Write-Host "    $msg" -ForegroundColor Yellow }
 $RepoRoot     = Split-Path -Parent $PSScriptRoot
 $ManifestPath = Join-Path $RepoRoot "themes.json"
 $ThemeDir     = Join-Path $env:USERPROFILE ".vscode\glass-themes"
-$SettingsPath = Join-Path $env:APPDATA "Code\User\settings.json"
 $AppFolder    = if ($Insiders) { "Microsoft VS Code Insiders" } else { "Microsoft VS Code" }
+$SettingsPath = if ($Insiders) {
+    Join-Path $env:APPDATA "Code - Insiders\User\settings.json"
+} else {
+    Join-Path $env:APPDATA "Code\User\settings.json"
+}
 $ExtDir        = Join-Path $RepoRoot ".cache\extensions"
-$ExtRoot       = Join-Path $env:USERPROFILE ".vscode\extensions"
+$ExtRoot       = if ($Insiders) {
+    Join-Path $env:USERPROFILE ".vscode-insiders\extensions"
+} else {
+    Join-Path $env:USERPROFILE ".vscode\extensions"
+}
 $RequiredCssExtId = "be5invis.vscode-custom-css"
 
 function Get-CustomCssMirrorPaths {

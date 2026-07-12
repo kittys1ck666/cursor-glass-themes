@@ -6,7 +6,6 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MANIFEST="$REPO_ROOT/themes.json"
 THEME_DIR="$HOME/.vscode/glass-themes"
 EXT_DIR="$REPO_ROOT/.cache/extensions"
-EXT_ROOT="$HOME/.vscode/extensions"
 REQUIRED_CSS_EXT="be5invis.vscode-custom-css"
 
 THEME_ID=""
@@ -80,11 +79,21 @@ PY
 
 [[ -z "$THEME_ID" ]] && pick_theme
 
+if [[ "$INSIDERS" -eq 1 ]]; then
+  EXT_ROOT="$HOME/.vscode-insiders/extensions"
+else
+  EXT_ROOT="$HOME/.vscode/extensions"
+fi
+
 read_theme_meta() {
   python3 - "$MANIFEST" "$THEME_ID" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
-t = next(x for x in data["themes"] if x["id"] == sys.argv[2])
+try:
+    t = next(x for x in data["themes"] if x["id"] == sys.argv[2])
+except StopIteration:
+    ids = ", ".join(x["id"] for x in data["themes"])
+    raise SystemExit(f"Unknown theme '{sys.argv[2]}'. Available: {ids}")
 base = t.get("vscodeTheme", t.get("cursorTheme", "Abyss"))
 print(t["preset"])
 print(base)
@@ -173,9 +182,20 @@ mirror_paths = [sandbox, sandbox_esm, browser]
 if sys.platform == "darwin":
     code_cli = app_dir / "bin/code"
 else:
-    code_cli = pathlib.Path("/usr/bin/code")
-    if not code_cli.is_file():
-        code_cli = pathlib.Path(os.environ.get("PATH", "")).joinpath("code")
+    import shutil
+    which_names = ("code-insiders", "code") if insiders else ("code", "code-insiders")
+    found = None
+    for name in which_names:
+        found = shutil.which(name)
+        if found:
+            break
+    candidates_cli = [
+        pathlib.Path(found) if found else None,
+        pathlib.Path("/usr/bin/code-insiders" if insiders else "/usr/bin/code"),
+        pathlib.Path("/usr/bin/code"),
+        pathlib.Path("/snap/bin/code"),
+    ]
+    code_cli = next((p for p in candidates_cli if p and p.is_file()), pathlib.Path("/usr/bin/code"))
 
 print(json.dumps({
     "app_dir": str(app_dir),

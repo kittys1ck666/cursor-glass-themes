@@ -50,7 +50,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Theme noir -Skip
 ### macOS / Linux
 
 ```bash
-chmod +x scripts/install.sh
+chmod +x scripts/install.sh scripts/uninstall.sh
 ./scripts/install.sh           # interactive
 ./scripts/install.sh sakura    # direct
 ```
@@ -64,9 +64,14 @@ chmod +x scripts/install.sh
 
 **Installed to:** `~/.cursor/cursor-abyss-glass/`
 
-**Switch theme:** re-run `install.ps1 -Theme <id>` — no uninstall needed.
+**Switch theme:** re-run `install.sh sakura` / `install.ps1 -Theme sakura` — no uninstall needed.
 
-**Uninstall:** `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1`
+**Uninstall**
+
+- Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1`
+- macOS / Linux: `./scripts/uninstall.sh`
+
+Uninstall restores `settings.json` from `settings.json.bak-glass-theme` when available.
 
 ---
 
@@ -103,6 +108,8 @@ chmod +x scripts/install-vscode.sh scripts/uninstall-vscode.sh
 
 The script patches `Visual Studio Code.app` in `/Applications`. If the patch step needs elevated rights, it re-runs itself with `sudo` (enter your Mac password when prompted). **Fully quit VS Code** before installing.
 
+On **Linux**, the installer auto-detects common install paths (`/usr/share/code`, `~/.local/share/code`, `/opt/visual-studio-code`, …) and the `code` / `code-insiders` CLI.
+
 **After install**
 
 1. Fully quit VS Code  
@@ -118,7 +125,11 @@ If patching failed, close VS Code, run the installer **as Administrator**, then 
 **Uninstall**
 
 - Windows: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-vscode.ps1`
-- macOS: `./scripts/uninstall-vscode.sh`
+- Windows Insiders: `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-vscode.ps1 -Insiders`
+- macOS / Linux: `./scripts/uninstall-vscode.sh`
+- macOS / Linux Insiders: `./scripts/uninstall-vscode.sh --insiders`
+
+Uninstall restores `settings.json` from backup when present, and restores workbench HTML (including CSP) from `workbench.*.bak-custom-css` when available.
 
 ---
 
@@ -177,13 +188,13 @@ cursor-glass-themes/
 └── scripts/
     ├── install.ps1             # Cursor (Windows)
     ├── install.sh              # Cursor (macOS / Linux)
+    ├── uninstall.ps1           # Cursor (Windows)
+    ├── uninstall.sh            # Cursor (macOS / Linux)
     ├── install-vscode.ps1      # VS Code (Windows)
     ├── install-vscode.sh       # VS Code (macOS / Linux)
-    ├── uninstall.ps1           # Cursor
     ├── uninstall-vscode.ps1    # VS Code (Windows)
     └── uninstall-vscode.sh     # VS Code (macOS / Linux)
 ```
-
 **CSS load order:** `preset` → `glass-base` → `ide-agent` (Cursor only) → `ide-workbench` → `marble.js`
 
 ---
@@ -197,6 +208,7 @@ cursor-glass-themes/
 
 | Variable | Purpose |
 |----------|---------|
+| `--a-wb-surface` | Base surface hex for workbench colorCustomizations |
 | `--a-fg-bright` | Main text (`#111` on light themes) |
 | `--a-glass-input` | Input / code block opacity |
 | `--a-marble-c1`…`c5` | Marble gradient (RGB 0–1, comma-separated) |
