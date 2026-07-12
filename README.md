@@ -73,6 +73,26 @@ chmod +x scripts/install.sh scripts/uninstall.sh
 
 Uninstall restores `settings.json` from `settings.json.bak-glass-theme` when available.
 
+> Note: each install overwrites `.bak-glass-theme` with the *current* settings. To keep a pristine pre-glass backup, copy it aside before switching themes.
+
+**Cursor troubleshooting**
+
+| Symptom | Fix |
+|---------|-----|
+| Theme plain / no marble | Fully quit Cursor → Fix Checksums: Apply → restart. Re-run installer after Cursor updates. |
+| `cursor` CLI missing (Linux) | Install CLI or open Cursor and install the two required extensions manually, then re-run installer. |
+| Patch fails on `/usr/share/cursor` | Installer uses `sudo` for the patch step only. Close Cursor first. |
+| Agents OK, IDE agent sidebar plain | Re-run installer (current CSS keeps markdown tables / AI glass surfaces in IDE). |
+| Debug marble attach | In `theme/marble.js` set `DEBUG = true` and/or `SHOW_HUD = true`, reinstall. |
+
+**Verify Cursor patch** (macOS/Linux):
+
+```bash
+grep -l 'VSCODE-CUSTOM-CSS-START' \
+  /Applications/Cursor.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench*.html \
+  2>/dev/null || true
+```
+
 ---
 
 ## Install — VS Code
@@ -211,8 +231,13 @@ cursor-glass-themes/
 | `--a-wb-surface` | Base surface hex for workbench colorCustomizations |
 | `--a-fg-bright` | Main text (`#111` on light themes) |
 | `--a-glass-input` | Input / code block opacity |
+| `--a-blur` / `--a-blur-chat` / `--a-blur-input` | Panel / chat / input blur radii |
+| `--a-selection-bg` | Text selection color |
+| `--a-btn-primary` / `--a-btn-primary-hover` | Submit button colors |
 | `--a-marble-c1`…`c5` | Marble gradient (RGB 0–1, comma-separated) |
 | `--a-theme-mode` | `dark` or `light` |
+
+Manual settings snippet (optional): see `settings/cursor-settings.snippet.json`.
 
 ---
 

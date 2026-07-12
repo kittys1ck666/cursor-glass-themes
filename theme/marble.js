@@ -51,6 +51,7 @@
   var panelRenderer = null;
   var panelHost = null;
   var panelTrackBar = null;
+  var panelObservers = [];
   var scroll = 0;
   var targetScroll = 0;
   var t0 = performance.now();
@@ -60,6 +61,8 @@
   var ideDiagAt = 0;
   var transparencyFixDone = false;
   var attachCheckTimer = null;
+  var themeUniformCache = null;
+  var themeUniformCacheAt = 0;
 
   var SHOW_HUD = false;
 
@@ -153,20 +156,55 @@
     return p;
   }
 
-  function readThemeUniforms(gl, prog) {
+  function getThemePalette() {
+    var now = performance.now();
+    if (themeUniformCache && now - themeUniformCacheAt < 1000) return themeUniformCache;
     var st = getComputedStyle(document.documentElement);
     var keys = ["c1", "c2", "c3", "c4", "c5"];
+    var colors = {};
     for (var i = 0; i < keys.length; i++) {
-      var v = parseTriplet(st.getPropertyValue("--a-marble-" + keys[i]));
+      colors[keys[i]] = parseTriplet(st.getPropertyValue("--a-marble-" + keys[i]));
+    }
+    themeUniformCache = {
+      colors: colors,
+      vignette: parseFloat(st.getPropertyValue("--a-marble-vignette")) || 0.45,
+      bright: parseFloat(st.getPropertyValue("--a-marble-brightness")) || 0.9,
+      cssGradient: buildCssFallback(colors),
+    };
+    themeUniformCacheAt = now;
+    return themeUniformCache;
+  }
+
+  function buildCssFallback(colors) {
+    function toRgb(t) {
+      return "rgb(" + Math.round(t[0] * 255) + "," + Math.round(t[1] * 255) + "," + Math.round(t[2] * 255) + ")";
+    }
+    return (
+      "radial-gradient(120% 80% at 20% 10%, " + toRgb(colors.c5) + " 0%, transparent 55%)," +
+      "radial-gradient(100% 90% at 80% 80%, " + toRgb(colors.c3) + " 0%, transparent 50%)," +
+      "linear-gradient(145deg, " + toRgb(colors.c1) + " 0%, " + toRgb(colors.c2) + " 45%, " + toRgb(colors.c4) + " 100%)"
+    );
+  }
+
+  function applyCssFallback(el) {
+    if (!el) return;
+    var pal = getThemePalette();
+    el.style.background = pal.cssGradient;
+    el.style.backgroundSize = "cover";
+  }
+
+  function readThemeUniforms(gl, prog) {
+    var pal = getThemePalette();
+    var keys = ["c1", "c2", "c3", "c4", "c5"];
+    for (var i = 0; i < keys.length; i++) {
+      var v = pal.colors[keys[i]];
       var loc = gl.getUniformLocation(prog, "u_" + keys[i]);
       if (loc) gl.uniform3f(loc, v[0], v[1], v[2]);
     }
-    var vig = parseFloat(st.getPropertyValue("--a-marble-vignette")) || 0.45;
-    var br = parseFloat(st.getPropertyValue("--a-marble-brightness")) || 0.9;
     var lv = gl.getUniformLocation(prog, "u_vignette");
     var lb = gl.getUniformLocation(prog, "u_bright");
-    if (lv) gl.uniform1f(lv, vig);
-    if (lb) gl.uniform1f(lb, br);
+    if (lv) gl.uniform1f(lv, pal.vignette);
+    if (lb) gl.uniform1f(lb, pal.bright);
   }
 
   function compile(gl, type, src) {
@@ -386,6 +424,10 @@
   }
 
   function detachPanel() {
+    for (var i = 0; i < panelObservers.length; i++) {
+      try { panelObservers[i].disconnect(); } catch (e) {}
+    }
+    panelObservers = [];
     if (panelHost) {
       delete panelHost.dataset.abyssHost;
       var bg = panelHost.querySelector(".abyss-panel-bg");
@@ -412,7 +454,11 @@
     };
 
     globalRenderer = createRenderer(canvas, fakeHost);
-    if (globalRenderer && !globalRenderer._logged) {
+    if (!globalRenderer) {
+      applyCssFallback(wrap);
+      log("global: webgl unavailable — CSS fallback");
+      globalRenderer = { canvas: canvas, el: fakeHost, draw: function () {}, cssFallback: true };
+    } else if (!globalRenderer._logged) {
       globalRenderer._logged = true;
       log("ready");
     }
@@ -437,12 +483,9 @@
 
     panelRenderer = createRenderer(canvas, metricsEl);
     if (!panelRenderer) {
-      delete el.dataset.abyssHost;
-      if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-      panelHost = null;
-      panelTrackBar = null;
-      log("panel: webgl failed on", el.className.split(" ").slice(0, 3).join("."));
-      return false;
+      applyCssFallback(wrap);
+      panelRenderer = { canvas: canvas, el: metricsEl, draw: function () {}, cssFallback: true };
+      log("panel: webgl failed — CSS fallback on", el.className.split(" ").slice(0, 3).join("."));
     }
 
     if (isGlassMode()) {
@@ -451,17 +494,21 @@
     }
 
     try {
-      new ResizeObserver(function () {
-        if (panelRenderer && panelRenderer.canvas) {
+      var ro1 = new ResizeObserver(function () {
+        if (panelRenderer && panelRenderer.draw && !panelRenderer.cssFallback) {
           panelRenderer.draw((performance.now() - t0) / 1000, scroll);
         }
-      }).observe(metricsEl);
+      });
+      ro1.observe(metricsEl);
+      panelObservers.push(ro1);
       if (panelTrackBar && panelTrackBar !== metricsEl) {
-        new ResizeObserver(function () {
-          if (panelRenderer && panelRenderer.canvas) {
+        var ro2 = new ResizeObserver(function () {
+          if (panelRenderer && panelRenderer.draw && !panelRenderer.cssFallback) {
             panelRenderer.draw((performance.now() - t0) / 1000, scroll);
           }
-        }).observe(panelTrackBar);
+        });
+        ro2.observe(panelTrackBar);
+        panelObservers.push(ro2);
       }
     } catch (e) {}
 
@@ -472,8 +519,9 @@
   function syncGlobalVisibility() {
     var global = document.getElementById("abyss-global-bg");
     if (!global) return;
+    /* IDE: hide global when panel marble is attached — avoid dual WebGL cost */
     if (!isGlassMode()) {
-      global.style.display = "";
+      global.style.display = panelRenderer ? "none" : "";
       return;
     }
     global.style.display = panelRenderer ? "none" : "";
@@ -540,8 +588,8 @@
     var reduced = prefersReducedMotion();
     if (reduced) {
       var tStatic = 0;
-      if (panelRenderer) panelRenderer.draw(tStatic, scroll);
-      if (globalRenderer && (!panelRenderer || !isGlassMode())) {
+      if (panelRenderer && !panelRenderer.cssFallback) panelRenderer.draw(tStatic, scroll);
+      if (globalRenderer && !globalRenderer.cssFallback && !panelRenderer) {
         globalRenderer.draw(tStatic, scroll);
       }
       document.body.classList.add("abyss-gpu");
@@ -565,8 +613,9 @@
         scroll += (targetScroll - scroll) * 0.07;
         var t = (now - t0) / 1000;
 
-        if (panelRenderer) panelRenderer.draw(t, scroll);
-        if (globalRenderer && (!panelRenderer || !isGlassMode())) {
+        if (panelRenderer && !panelRenderer.cssFallback) panelRenderer.draw(t, scroll);
+        /* IDE with panel: panel only. Otherwise draw global. */
+        if (globalRenderer && !globalRenderer.cssFallback && !panelRenderer) {
           globalRenderer.draw(t, scroll);
         }
 

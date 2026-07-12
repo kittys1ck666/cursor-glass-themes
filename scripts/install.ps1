@@ -23,9 +23,14 @@ $ManifestPath = Join-Path $RepoRoot "themes.json"
 $ThemeDir     = Join-Path $env:USERPROFILE ".cursor\cursor-abyss-glass"
 $SettingsPath = Join-Path $env:APPDATA "Cursor\User\settings.json"
 $CursorExe    = Join-Path $env:LOCALAPPDATA "Programs\cursor\Cursor.exe"
-$WorkbenchHtml = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\out\vs\code\electron-sandbox\workbench\workbench.html"
-$ProductJson   = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\product.json"
+$CursorAppDir = Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app"
+$VsCodeDir    = Join-Path $CursorAppDir "out\vs\code"
+$WorkbenchHtml = Join-Path $VsCodeDir "electron-sandbox\workbench\workbench.html"
+$SandboxEsmHtml = Join-Path $VsCodeDir "electron-sandbox\workbench\workbench.esm.html"
+$BrowserHtml  = Join-Path $VsCodeDir "electron-browser\workbench\workbench.html"
+$ProductJson   = Join-Path $CursorAppDir "product.json"
 $ExtDir        = Join-Path $RepoRoot ".cache\extensions"
+$CustomCssWorkbenchPaths = @($WorkbenchHtml, $SandboxEsmHtml, $BrowserHtml)
 
 function Select-ThemeInteractive {
     param($ManifestObj)
@@ -111,6 +116,23 @@ function Get-WorkbenchColorCustomizations {
         'breadcrumb.background'               = Alpha $h '00'
         'breadcrumbPicker.background'         = $widgetBg
         'terminal.background'                 = Alpha $h '00'
+        'terminal.foreground'                 = if ($Mode -eq 'light') { '#1f1018' } else { '#e8eef8' }
+        'terminal.ansiBlack'                  = if ($Mode -eq 'light') { '#2a2a2a' } else { '#0b1220' }
+        'terminal.ansiRed'                    = '#ff6b7a'
+        'terminal.ansiGreen'                  = if ($Mode -eq 'light') { '#1a7f4b' } else { '#4ae878' }
+        'terminal.ansiYellow'                 = '#f0c674'
+        'terminal.ansiBlue'                   = if ($Mode -eq 'light') { '#2f6fed' } else { '#7ec8ff' }
+        'terminal.ansiMagenta'                = '#c792ea'
+        'terminal.ansiCyan'                   = '#7fdbca'
+        'terminal.ansiWhite'                  = if ($Mode -eq 'light') { '#1f1018' } else { '#e8eef8' }
+        'terminal.ansiBrightBlack'            = '#6b7a90'
+        'terminal.ansiBrightRed'              = '#ff8a96'
+        'terminal.ansiBrightGreen'            = '#7dffb0'
+        'terminal.ansiBrightYellow'           = '#ffe08a'
+        'terminal.ansiBrightBlue'             = '#a8dcff'
+        'terminal.ansiBrightMagenta'          = '#e0b0ff'
+        'terminal.ansiBrightCyan'             = '#a8fff0'
+        'terminal.ansiBrightWhite'            = '#ffffff'
         'editorGroup.border'                  = Alpha $h '00'
         'editorGroupHeader.tabsBorder'        = Alpha $h '00'
         'tab.border'                          = Alpha $h '00'
@@ -183,7 +205,10 @@ function Install-ExtensionVsix {
 function Patch-Workbench {
     param([string]$CombinedCss, [string]$JsContent)
 
-    if (-not (Test-Path $WorkbenchHtml)) { throw "workbench.html not found" }
+    $templatePaths = @($WorkbenchHtml, $SandboxEsmHtml, $BrowserHtml)
+    if (-not ($templatePaths | Where-Object { $_ -and (Test-Path $_) })) {
+        throw "workbench.html not found under $VsCodeDir"
+    }
 
     $indicatorPath = Join-Path $env:USERPROFILE ".cursor\extensions\be5invis.vscode-custom-css-7.4.0\src\statusbar.js"
     if (-not (Test-Path $indicatorPath)) {
@@ -196,9 +221,37 @@ function Patch-Workbench {
     }
 
     $indicator = Get-Content $indicatorPath -Raw -Encoding UTF8
-    $html = Get-Content $WorkbenchHtml -Raw -Encoding UTF8
+
+    # Prefer pristine backup when available
+    $html = $null
+    foreach ($p in $templatePaths) {
+        if (-not $p) { continue }
+        $dir = Split-Path $p -Parent
+        if (-not (Test-Path $dir)) { continue }
+        $bak = Get-ChildItem $dir -Filter "workbench.*.bak-custom-css" -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($bak) {
+            $raw = Get-Content $bak.FullName -Raw -Encoding UTF8
+            if ($raw -notmatch 'VSCODE-CUSTOM-CSS-START') {
+                Write-Ok "Using pre-patch backup: $($bak.Name)"
+                $html = $raw
+                break
+            }
+        }
+    }
+    if (-not $html) {
+        foreach ($p in $templatePaths) {
+            if ($p -and (Test-Path $p)) {
+                $html = Get-Content $p -Raw -Encoding UTF8
+                break
+            }
+        }
+    }
+    if (-not $html) { throw "workbench.html template not found" }
+
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', ''
     $html = $html -replace '(?s)<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', ''
+    $html = $html -replace '(?s)<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?/>', ''
 
     $id = [guid]::NewGuid().ToString()
     $inject = @"
@@ -211,16 +264,31 @@ function Patch-Workbench {
 
 "@
     $html = $html -replace '</html>', "$inject</html>"
-    [System.IO.File]::WriteAllText($WorkbenchHtml, $html, [System.Text.UTF8Encoding]::new($false))
 
-    $hash = [Convert]::ToBase64String(
-        [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($WorkbenchHtml))
-    ).TrimEnd('=')
+    foreach ($target in ($CustomCssWorkbenchPaths | Select-Object -Unique)) {
+        if (-not $target) { continue }
+        $targetDir = Split-Path $target -Parent
+        if (-not (Test-Path $targetDir)) {
+            New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+        }
+        [System.IO.File]::WriteAllText($target, $html, [System.Text.UTF8Encoding]::new($false))
+        Write-Ok "Patched $target"
 
-    $product = Get-Content $ProductJson -Raw -Encoding UTF8
-    $product = $product -replace '"vs/code/electron-sandbox/workbench/workbench.html":\s*"[^"]+"', "`"vs/code/electron-sandbox/workbench/workbench.html`": `"$hash`""
-    [System.IO.File]::WriteAllText($ProductJson, $product, [System.Text.UTF8Encoding]::new($false))
-    Write-Ok "Patched workbench.html + checksum"
+        $hash = [Convert]::ToBase64String(
+            [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($target))
+        ).TrimEnd('=')
+        $rel = $target.Substring($CursorAppDir.Length).TrimStart('\').Replace('\', '/')
+        $key = if ($rel -match '^out/(.+)$') { $matches[1] } else { $rel }
+        $product = Get-Content $ProductJson -Raw -Encoding UTF8
+        $escapedKey = [regex]::Escape($key)
+        if ($product -match "`"$escapedKey`":\s*`"[^`"]+`"") {
+            $product = $product -replace "`"$escapedKey`":\s*`"[^`"]+`"", "`"$key`": `"$hash`""
+        } else {
+            $product = $product -replace '("checksums"\s*:\s*\{)', "`$1`n`t`t`"$key`": `"$hash`","
+        }
+        [System.IO.File]::WriteAllText($ProductJson, $product, [System.Text.UTF8Encoding]::new($false))
+    }
+    Write-Ok "Patched workbench mirrors + checksums (CSP stripped)"
 }
 
 Write-Host @"

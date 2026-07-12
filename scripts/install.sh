@@ -64,18 +64,18 @@ case "$(uname -s)" in
   Darwin)
     SETTINGS_PATH="$HOME/Library/Application Support/Cursor/User/settings.json"
     CURSOR_APP="/Applications/Cursor.app/Contents/MacOS/Cursor"
-    WORKBENCH_HTML="/Applications/Cursor.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html"
-    PRODUCT_JSON="/Applications/Cursor.app/Contents/Resources/app/product.json"
+    APP_DIR="/Applications/Cursor.app/Contents/Resources/app"
     ;;
   Linux)
     SETTINGS_PATH="$HOME/.config/Cursor/User/settings.json"
     CURSOR_APP="$(command -v cursor || true)"
-    WORKBENCH_HTML=""
-    PRODUCT_JSON=""
-    for base in "$HOME/.local/share/cursor" "/usr/share/cursor" "/opt/Cursor"; do
-      if [[ -f "$base/resources/app/out/vs/code/electron-sandbox/workbench/workbench.html" ]]; then
-        WORKBENCH_HTML="$base/resources/app/out/vs/code/electron-sandbox/workbench/workbench.html"
-        PRODUCT_JSON="$base/resources/app/product.json"
+    APP_DIR=""
+    for base in "$HOME/.local/share/cursor" "/usr/share/cursor" "/opt/Cursor" "/opt/cursor"; do
+      if [[ -f "$base/resources/app/product.json" ]]; then
+        APP_DIR="$base/resources/app"
+        break
+      elif [[ -f "$base/product.json" ]]; then
+        APP_DIR="$base"
         break
       fi
     done
@@ -83,11 +83,42 @@ case "$(uname -s)" in
   *) echo "Unsupported OS"; exit 1 ;;
 esac
 
+WORKBENCH_HTML=""
+PRODUCT_JSON=""
+MIRROR_PATHS_JSON="[]"
+if [[ -n "${APP_DIR:-}" && -d "$APP_DIR" ]]; then
+  PRODUCT_JSON="$APP_DIR/product.json"
+  VSCODE_DIR="$APP_DIR/out/vs/code"
+  SANDBOX="$VSCODE_DIR/electron-sandbox/workbench/workbench.html"
+  SANDBOX_ESM="$VSCODE_DIR/electron-sandbox/workbench/workbench.esm.html"
+  BROWSER="$VSCODE_DIR/electron-browser/workbench/workbench.html"
+  for candidate in "$SANDBOX" "$SANDBOX_ESM" "$BROWSER"; do
+    if [[ -f "$candidate" ]]; then
+      WORKBENCH_HTML="$candidate"
+      break
+    fi
+  done
+  MIRROR_PATHS_JSON="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$SANDBOX" "$SANDBOX_ESM" "$BROWSER")"
+fi
+
 to_file_url() {
   python3 - "$1" <<'PY'
 import pathlib, sys
 print(pathlib.Path(sys.argv[1]).resolve().as_uri())
 PY
+}
+
+maybe_sudo_for_patch() {
+  if [[ -z "${PRODUCT_JSON:-}" || ! -f "$PRODUCT_JSON" ]]; then
+    return 1
+  fi
+  if [[ -w "$PRODUCT_JSON" ]]; then
+    return 0
+  fi
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    return 0
+  fi
+  return 2
 }
 
 echo ""
@@ -164,6 +195,23 @@ colors = {
     "breadcrumb.background": a("00"),
     "breadcrumbPicker.background": widget,
     "terminal.background": a("00"),
+    "terminal.foreground": "#e8eef8" if mode != "light" else "#1f1018",
+    "terminal.ansiBlack": "#0b1220" if mode != "light" else "#2a2a2a",
+    "terminal.ansiRed": "#ff6b7a",
+    "terminal.ansiGreen": "#4ae878" if mode != "light" else "#1a7f4b",
+    "terminal.ansiYellow": "#f0c674",
+    "terminal.ansiBlue": "#7ec8ff" if mode != "light" else "#2f6fed",
+    "terminal.ansiMagenta": "#c792ea",
+    "terminal.ansiCyan": "#7fdbca",
+    "terminal.ansiWhite": "#e8eef8" if mode != "light" else "#1f1018",
+    "terminal.ansiBrightBlack": "#6b7a90",
+    "terminal.ansiBrightRed": "#ff8a96",
+    "terminal.ansiBrightGreen": "#7dffb0",
+    "terminal.ansiBrightYellow": "#ffe08a",
+    "terminal.ansiBrightBlue": "#a8dcff",
+    "terminal.ansiBrightMagenta": "#e0b0ff",
+    "terminal.ansiBrightCyan": "#a8fff0",
+    "terminal.ansiBrightWhite": "#ffffff",
     "editorGroup.border": a("00"),
     "editorGroupHeader.tabsBorder": a("00"),
     "tab.border": a("00"),
@@ -197,8 +245,14 @@ PY
 echo "==> Installing extensions"
 CACHE="$REPO_ROOT/.cache/extensions"
 mkdir -p "$CACHE"
-CMD="${CURSOR_APP:-cursor}"
-if [[ -x "$CMD" || -n "${CURSOR_APP:-}" ]]; then
+CMD=""
+if [[ -n "${CURSOR_APP:-}" && -x "$CURSOR_APP" ]]; then
+  CMD="$CURSOR_APP"
+elif command -v cursor >/dev/null 2>&1; then
+  CMD="$(command -v cursor)"
+fi
+
+if [[ -n "$CMD" ]]; then
   for pair in \
     "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/be5invis/vsextensions/vscode-custom-css/7.4.0/vspackage|vscode-custom-css-7.4.0.vsix" \
     "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/RimuruChan/vsextensions/vscode-fix-checksums-next/1.4.0/vspackage|vscode-fix-checksums-next-1.4.0.vsix"
@@ -208,40 +262,117 @@ if [[ -x "$CMD" || -n "${CURSOR_APP:-}" ]]; then
     [[ -f "$OUT" ]] || curl -fsSL "$URL" -o "$OUT"
     "$CMD" --install-extension "$OUT" || true
   done
+else
+  echo "    Warning: Cursor CLI not found. Install extensions manually from $CACHE after downloading VSIX files,"
+  echo "    or ensure 'cursor' is on PATH, then re-run this installer."
 fi
 
-if [[ -f "${WORKBENCH_HTML:-}" ]]; then
-  echo "==> Patching workbench"
-  python3 - "$WORKBENCH_HTML" "$PRODUCT_JSON" "$BUNDLE_PATH" "$JS_PATH" "$HOME" <<'PY' || true
-import hashlib, base64, glob, pathlib, re, sys, uuid
-html_path, product_path, css_path, js_path, home = sys.argv[1:6]
-exts = glob.glob(str(pathlib.Path(home)/".cursor/extensions/be5invis.vscode-custom-css-*/src/statusbar.js"))
+if [[ -n "${PRODUCT_JSON:-}" && -f "$PRODUCT_JSON" ]]; then
+  echo "==> Patching workbench (CSP strip + mirrors)"
+  PATCH_RC=0
+  maybe_sudo_for_patch || PATCH_RC=$?
+  RUNNER=(python3)
+  if [[ "$PATCH_RC" -eq 2 ]]; then
+    echo "    Patching requires administrator privileges — using sudo for patch only..."
+    RUNNER=(sudo -E python3)
+  elif [[ "$PATCH_RC" -eq 1 ]]; then
+    echo "    product.json missing — skip patch"
+    RUNNER=()
+  fi
+  if [[ ${#RUNNER[@]} -gt 0 ]]; then
+  if ! "${RUNNER[@]}" - "$PRODUCT_JSON" "$BUNDLE_PATH" "$JS_PATH" "$HOME" "$MIRROR_PATHS_JSON" <<'PY'
+import base64, glob, hashlib, json, pathlib, re, sys, uuid
+
+product_path = pathlib.Path(sys.argv[1])
+css_path = pathlib.Path(sys.argv[2])
+js_path = pathlib.Path(sys.argv[3])
+home = pathlib.Path(sys.argv[4])
+mirror_paths = [pathlib.Path(p) for p in json.loads(sys.argv[5]) if p]
+
+exts = sorted(glob.glob(str(home / ".cursor/extensions/be5invis.vscode-custom-css-*/src/statusbar.js")))
 if not exts:
-    print("    Run Enable Custom CSS and JS in Cursor")
-    sys.exit(0)
+    print("    statusbar.js not found — run Enable Custom CSS and JS in Cursor after restart")
+    raise SystemExit(0)
+
 indicator = pathlib.Path(exts[0]).read_text(encoding="utf-8")
-css = pathlib.Path(css_path).read_text(encoding="utf-8")
-js = pathlib.Path(js_path).read_text(encoding="utf-8")
-html = pathlib.Path(html_path).read_text(encoding="utf-8")
-html = re.sub(r'<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*', '', html)
-html = re.sub(r'<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*', '', html)
+css = css_path.read_text(encoding="utf-8")
+js = js_path.read_text(encoding="utf-8")
+patch_re = re.compile(r"<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID [\w-]+ !! -->\s*")
+block_re = re.compile(r"<!-- !! VSCODE-CUSTOM-CSS-START !! -->[\s\S]*?<!-- !! VSCODE-CUSTOM-CSS-END !! -->\s*")
+csp_re = re.compile(r'(?s)<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?/>')
+
+def clear_patches(html: str) -> str:
+    return block_re.sub("", patch_re.sub("", html))
+
+def get_pristine(paths):
+    for p in paths:
+        parent = p.parent
+        if not parent.is_dir():
+            continue
+        backups = sorted(parent.glob("workbench.*.bak-custom-css"), key=lambda x: x.stat().st_mtime, reverse=True)
+        for bak in backups:
+            raw = bak.read_text(encoding="utf-8")
+            if "VSCODE-CUSTOM-CSS-START" not in raw:
+                print(f"    Using pre-patch backup: {bak.name}")
+                return clear_patches(raw)
+    for p in paths:
+        if p.is_file():
+            return clear_patches(p.read_text(encoding="utf-8"))
+    raise SystemExit("workbench.html template not found")
+
+html = csp_re.sub("", get_pristine(mirror_paths))
 sid = str(uuid.uuid4())
-inject = f"<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID {sid} !! -->\n<!-- !! VSCODE-CUSTOM-CSS-START !! -->\n<script>{indicator}</script>\n<style>{css}</style>\n<script>{js}</script>\n<!-- !! VSCODE-CUSTOM-CSS-END !! -->\n"
+inject = (
+    f"<!-- !! VSCODE-CUSTOM-CSS-SESSION-ID {sid} !! -->\n"
+    "<!-- !! VSCODE-CUSTOM-CSS-START !! -->\n"
+    f"<script>{indicator}</script>\n"
+    f"<style>{css}</style>\n"
+    f"<script>{js}</script>\n"
+    "<!-- !! VSCODE-CUSTOM-CSS-END !! -->\n"
+)
 html = html.replace("</html>", inject + "</html>")
-pathlib.Path(html_path).write_text(html, encoding="utf-8")
-digest = base64.b64encode(hashlib.sha256(pathlib.Path(html_path).read_bytes()).digest()).decode().rstrip("=")
-product = pathlib.Path(product_path).read_text(encoding="utf-8")
-product = re.sub(r'"vs/code/electron-sandbox/workbench/workbench.html":\s*"[^"]+"', f'"vs/code/electron-sandbox/workbench/workbench.html": "{digest}"', product)
-pathlib.Path(product_path).write_text(product, encoding="utf-8")
-print("    workbench patched")
+
+patched = []
+for target in dict.fromkeys(mirror_paths):
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(html, encoding="utf-8")
+    patched.append(target)
+    print(f"    Patched {target}")
+
+app_dir = product_path.parent
+product = product_path.read_text(encoding="utf-8")
+keys = []
+for wb_path in patched:
+    digest = base64.b64encode(hashlib.sha256(wb_path.read_bytes()).digest()).decode().rstrip("=")
+    rel = wb_path.relative_to(app_dir).as_posix()
+    key = rel[4:] if rel.startswith("out/") else rel
+    escaped = re.escape(key)
+    if re.search(rf'"{escaped}":\s*"[^"]+"', product):
+        product = re.sub(rf'"{escaped}":\s*"[^"]+"', f'"{key}": "{digest}"', product)
+    else:
+        product = re.sub(r'("checksums"\s*:\s*\{)', rf'\1\n\t\t"{key}": "{digest}",', product, count=1)
+    keys.append(key)
+product_path.write_text(product, encoding="utf-8")
+print(f"    Updated product.json checksums ({', '.join(dict.fromkeys(keys))})")
 PY
+  then
+    echo "    Warning: workbench patch failed. Close Cursor and re-run (sudo may be required)."
+  fi
+  fi
+elif [[ -z "${APP_DIR:-}" ]]; then
+  echo "==> Workbench not found — skip patch. After installing Cursor, re-run this script."
 fi
 
 cat <<EOF
 
   Done! Theme: $THEME_NAME
 
-  Restart Cursor. Switch theme: ./scripts/install.sh sakura
+  Next steps:
+    1. Fully quit and restart Cursor
+    2. Command Palette → Fix Checksums: Apply (if prompted)
+    3. Restart again
+
+  Switch theme: ./scripts/install.sh sakura
   Uninstall: ./scripts/uninstall.sh
 
 EOF

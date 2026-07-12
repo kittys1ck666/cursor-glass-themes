@@ -166,8 +166,26 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .composi
 }
 
 body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .monaco-editor,
-body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .monaco-editor-background {
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .monaco-editor-background,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .xterm,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .xterm-viewport,
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .terminal-wrapper {
   background: transparent !important;
+  background-color: transparent !important;
+}
+
+body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel .xterm {
+  color: var(--a-fg-bright) !important;
+}
+
+/* Light Agents glass window — keep readable chrome */
+html[data-a-theme-mode="light"] body[data-cursor-glass-mode="true"],
+html[data-a-theme-mode="light"] body[data-cursor-glass-mode="true"] .monaco-workbench {
+  color: var(--a-fg-bright) !important;
+  --vscode-foreground: var(--a-fg-bright) !important;
+  --vscode-editor-foreground: var(--a-fg-bright) !important;
+  --vscode-descriptionForeground: var(--a-muted) !important;
+  --vscode-icon-foreground: var(--a-icon-fg) !important;
 }
 
 /* Title bar + status bar */
@@ -227,4 +245,19 @@ body:not([data-cursor-glass-mode="true"]) .monaco-workbench .monaco-sash.vertica
 
 body:not([data-cursor-glass-mode="true"]) .monaco-workbench .monaco-sash::before {
   background: transparent !important;
+}
+
+/* Soften stacked blur when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.activitybar,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.sidebar > .content,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.editor > .content,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.panel > .content,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.titlebar,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .part.statusbar,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .quick-input-widget,
+  body:not([data-cursor-glass-mode="true"]) .monaco-workbench .suggest-widget {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
